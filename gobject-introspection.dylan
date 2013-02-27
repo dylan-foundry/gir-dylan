@@ -1,4 +1,7 @@
 module: gobject-introspection
+synopsis: bindings for the gobject-introspection library
+author: Bruce Mitchener, Jr.
+copyright: See LICENSE file in this distribution.
 
 define constant <gsize> = <C-unsigned-long>;
 
