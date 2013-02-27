@@ -15,3 +15,6 @@ TODO
   even have that) and ``<GObject>`` is the pointer to the struct.
 * Modify how enumerations are handled so that they use ``one-of``.
 * Add back bindings for ``GITypelib`` and ``GIBaseInfo``.
+* Convenient wrappers / translations for things that return
+  lists, etc.
+* Add actual tests to the test suite.
