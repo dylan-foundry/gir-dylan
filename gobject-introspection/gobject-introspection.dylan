@@ -4,6 +4,29 @@ author: Bruce Mitchener, Jr.
 copyright: See LICENSE file in this distribution.
 
 define constant <gsize> = <C-unsigned-long>;
+define constant <guint> = <C-unsigned-int>;
+define constant <gpointer> = <C-void*>;
+define constant <gchar> = <C-signed-char>;
+define constant <gint> = <C-signed-int>;
+define constant <glong> = <C-signed-long>;
+define constant <gulong> = <C-unsigned-long>;
+define constant <gint64> = <C-signed-long>;
+define constant <guint64> = <C-unsigned-long>;
+define constant <gfloat> = <C-float>;
+define constant <gdouble> = <C-double>;
+define constant <guint32> = <C-unsigned-int>;
+define constant <gboolean> = <gint>;
+define constant <gint32> = <C-signed-int>;
+define constant <gint8> = <C-signed-char>;
+define constant <guint8> = <C-unsigned-char>;
+define constant <gint16> = <C-signed-short>;
+define constant <guint16> = <C-unsigned-short>;
+define constant <gshort> = <C-signed-short>;
+define constant <gushort> = <C-unsigned-short>;
+define constant <gssize> = <C-signed-long>;
+define C-pointer-type <gchar*> => <gchar>;
+define C-pointer-type <gpointer*> => <gpointer>;
+define C-pointer-type <gchar**> => <gchar*>;
 
 define constant <GType> = <gsize>;
 
@@ -19,8 +42,6 @@ define C-struct <_GTypeInstance>
 end;
 
 define constant <GTypeInstance> = <_GTypeInstance>;
-
-define constant <guint> = <C-unsigned-int>;
 
 define C-struct <_GData>
 end;
@@ -49,7 +70,6 @@ end;
 
 define constant <GIRepository> = <_GIRepository>;
 
-define constant <gpointer> = <C-void*>;
 
 define C-struct <_GSList>
   slot _GSList$data :: <C-void*>;
@@ -60,9 +80,7 @@ define constant <GSList> = <_GSList>;
 
 define C-pointer-type <GSList*> => <GSList>;
 define C-pointer-type <GObject*> => <GObject>;
-define constant <gchar> = <C-signed-char>;
 
-define C-pointer-type <gchar*> => <gchar>;
 define constant <GParamFlags> = <C-int>;
 define constant $G-PARAM-READABLE = 1;
 define constant $G-PARAM-WRITABLE = 2;
@@ -91,19 +109,6 @@ end;
 define constant <GParamSpec> = <_GParamSpec>;
 
 define C-pointer-type <GParamSpec*> => <GParamSpec>;
-define constant <gint> = <C-signed-int>;
-
-define constant <glong> = <C-signed-long>;
-
-define constant <gulong> = <C-unsigned-long>;
-
-define constant <gint64> = <C-signed-long>;
-
-define constant <guint64> = <C-unsigned-long>;
-
-define constant <gfloat> = <C-float>;
-
-define constant <gdouble> = <C-double>;
 
 define C-union <anonymous-2007>
   slot anonymous-2007$v-int :: <C-signed-int>;
@@ -152,7 +157,6 @@ define constant <anonymous-2191> = <C-function-pointer>;
 define C-pointer-type <anonymous-2191*> => <anonymous-2191>;
 define constant <anonymous-2192> = <C-function-pointer>;
 define C-pointer-type <anonymous-2192*> => <anonymous-2192>;
-define C-pointer-type <gpointer*> => <gpointer>;
 define constant <gpointer<@6>> = <gpointer*>;
 define C-struct <_GObjectClass>
   slot _GObjectClass$g-type-class :: <_GTypeClass>;
@@ -208,7 +212,6 @@ end;
 define constant <GITypelib> = <_GITypelib>;
 
 define C-pointer-type <GITypelib*> => <GITypelib>;
-define constant <guint32> = <C-unsigned-int>;
 
 define constant <GQuark> = <guint32>;
 
@@ -231,8 +234,6 @@ define C-function g-irepository-load-typelib
   c-name: "g_irepository_load_typelib";
 end;
 
-define constant <gboolean> = <gint>;
-
 define C-function g-irepository-is-registered
   input parameter repository :: <GIRepository*>;
   input parameter namespace- :: <gchar*>;
@@ -241,7 +242,6 @@ define C-function g-irepository-is-registered
   c-name: "g_irepository_is_registered";
 end;
 
-define constant <gint32> = <C-signed-int>;
 
 define constant <gpointer<@4>> = <gpointer*>;
 define C-struct <_GIBaseInfoStub>
@@ -303,7 +303,6 @@ define C-function g-irepository-require-private
   c-name: "g_irepository_require_private";
 end;
 
-define C-pointer-type <gchar**> => <gchar*>;
 define C-function g-irepository-get-dependencies
   input parameter repository :: <GIRepository*>;
   input parameter namespace- :: <gchar*>;
@@ -629,20 +628,6 @@ define C-function g-constant-info-get-type
   result res :: <GITypeInfo*>;
   c-name: "g_constant_info_get_type";
 end;
-
-define constant <gint8> = <C-signed-char>;
-
-define constant <guint8> = <C-unsigned-char>;
-
-define constant <gint16> = <C-signed-short>;
-
-define constant <guint16> = <C-unsigned-short>;
-
-define constant <gshort> = <C-signed-short>;
-
-define constant <gushort> = <C-unsigned-short>;
-
-define constant <gssize> = <C-signed-long>;
 
 define C-union <_GIArgument>
   slot _GIArgument$v-boolean :: <C-signed-int>;
