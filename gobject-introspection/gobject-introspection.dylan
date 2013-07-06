@@ -137,33 +137,17 @@ define C-struct <_GObjectConstructParam>
 end;
 define C-pointer-type <GObjectConstructParam> => <_GObjectConstructParam>;
 
-define constant <anonymous-2185> = <C-function-pointer>;
-define C-pointer-type <anonymous-2185*> => <anonymous-2185>;
-define constant <anonymous-2186> = <C-function-pointer>;
-define C-pointer-type <anonymous-2186*> => <anonymous-2186>;
-define constant <anonymous-2187> = <C-function-pointer>;
-define C-pointer-type <anonymous-2187*> => <anonymous-2187>;
-define constant <anonymous-2188> = <C-function-pointer>;
-define C-pointer-type <anonymous-2188*> => <anonymous-2188>;
-define constant <anonymous-2189> = <C-function-pointer>;
-define C-pointer-type <anonymous-2189*> => <anonymous-2189>;
-define constant <anonymous-2190> = <C-function-pointer>;
-define C-pointer-type <anonymous-2190*> => <anonymous-2190>;
-define constant <anonymous-2191> = <C-function-pointer>;
-define C-pointer-type <anonymous-2191*> => <anonymous-2191>;
-define constant <anonymous-2192> = <C-function-pointer>;
-define C-pointer-type <anonymous-2192*> => <anonymous-2192>;
 define C-struct <_GObjectClass>
   slot _GObjectClass$g-type-class :: <_GTypeClass>;
   slot _GObjectClass$construct-properties :: <GSList>;
-  slot _GObjectClass$constructor :: <anonymous-2185*>;
-  slot _GObjectClass$set-property :: <anonymous-2186*>;
-  slot _GObjectClass$get-property :: <anonymous-2187*>;
-  slot _GObjectClass$dispose :: <anonymous-2188*>;
-  slot _GObjectClass$finalize :: <anonymous-2189*>;
-  slot _GObjectClass$dispatch-properties-changed :: <anonymous-2190*>;
-  slot _GObjectClass$notify :: <anonymous-2191*>;
-  slot _GObjectClass$constructed :: <anonymous-2192*>;
+  slot _GObjectClass$constructor :: <C-function-pointer>;
+  slot _GObjectClass$set-property :: <C-function-pointer>;
+  slot _GObjectClass$get-property :: <C-function-pointer>;
+  slot _GObjectClass$dispose :: <C-function-pointer>;
+  slot _GObjectClass$finalize :: <C-function-pointer>;
+  slot _GObjectClass$dispatch-properties-changed :: <C-function-pointer>;
+  slot _GObjectClass$notify :: <C-function-pointer>;
+  slot _GObjectClass$constructed :: <C-function-pointer>;
   slot _GObjectClass$flags :: <C-unsigned-long>;
   array slot _GObjectClass$pdummy :: <gpointer>, length: 6;
 end;
@@ -457,15 +441,11 @@ define C-function g-irepository-error-quark
   c-name: "g_irepository_error_quark";
 end;
 
-define constant <anonymous-2074> = <C-function-pointer>;
-define C-pointer-type <anonymous-2074*> => <anonymous-2074>;
-define constant <anonymous-2061> = <C-function-pointer>;
-define C-pointer-type <anonymous-2061*> => <anonymous-2061>;
-define constant <GClosureNotify> = <anonymous-2061*>;
+define constant <GClosureNotify> = <C-function-pointer>;
 
 define C-struct <_GClosureNotifyData>
   slot _GClosureNotifyData$data :: <C-void*>;
-  slot _GClosureNotifyData$notify :: <anonymous-2061*>;
+  slot _GClosureNotifyData$notify :: <C-function-pointer>;
 end;
 
 define constant <GClosureNotifyData> = <_GClosureNotifyData>;
@@ -482,7 +462,7 @@ define C-struct <_GClosure>
   bitfield slot _GClosure$derivative-flag :: <C-int>, width: 1;
   bitfield slot _GClosure$in-marshal :: <C-int>, width: 1;
   bitfield slot _GClosure$is-invalid :: <C-int>, width: 1;
-  slot _GClosure$marshal :: <anonymous-2074*>;
+  slot _GClosure$marshal :: <C-function-pointer>;
   slot _GClosure$data :: <C-void*>;
   slot _GClosure$notifiers :: <GClosureNotifyData*>;
 end;
@@ -961,21 +941,10 @@ define C-function g-interface-info-get-iface-struct
   c-name: "g_interface_info_get_iface_struct";
 end;
 
-define constant <anonymous-2545> = <C-function-pointer>;
-define C-pointer-type <anonymous-2545*> => <anonymous-2545>;
-define constant <GIObjectInfoRefFunction> = <anonymous-2545*>;
-
-define constant <anonymous-2546> = <C-function-pointer>;
-define C-pointer-type <anonymous-2546*> => <anonymous-2546>;
-define constant <GIObjectInfoUnrefFunction> = <anonymous-2546*>;
-
-define constant <anonymous-2547> = <C-function-pointer>;
-define C-pointer-type <anonymous-2547*> => <anonymous-2547>;
-define constant <GIObjectInfoSetValueFunction> = <anonymous-2547*>;
-
-define constant <anonymous-2548> = <C-function-pointer>;
-define C-pointer-type <anonymous-2548*> => <anonymous-2548>;
-define constant <GIObjectInfoGetValueFunction> = <anonymous-2548*>;
+define constant <GIObjectInfoRefFunction> = <C-function-pointer>;
+define constant <GIObjectInfoUnrefFunction> = <C-function-pointer>;
+define constant <GIObjectInfoSetValueFunction> = <C-function-pointer>;
+define constant <GIObjectInfoGetValueFunction> = <C-function-pointer>;
 
 define C-function g-object-info-get-type-name
   input parameter info :: <GIObjectInfo>;

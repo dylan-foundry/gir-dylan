@@ -21,7 +21,6 @@ TODO
 * Revisit what is exported. We probably don't need to export
   the structs, just the pointers to them. We probably don't need
   to export slot setters / getters.
-* Function pointers need some love.
 * Add something to make ``<GList>`` and ``<GSList>`` behave more
   like Dylan collections. Do we need to add bindings for the
   common functions for working with them?
