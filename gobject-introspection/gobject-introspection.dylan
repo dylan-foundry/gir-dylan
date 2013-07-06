@@ -25,6 +25,8 @@ define constant <gshort> = <C-signed-short>;
 define constant <gushort> = <C-unsigned-short>;
 define constant <gssize> = <C-signed-long>;
 define constant <GQuark> = <guint32>;
+define constant <GType> = <gsize>;
+define C-pointer-type <char**> => <char*>;
 define C-pointer-type <gchar*> => <gchar>;
 define C-pointer-type <gpointer*> => <gpointer>;
 define C-pointer-type <gchar**> => <gchar*>;
@@ -44,9 +46,6 @@ define C-struct <_GSList>
   slot _GSList$next :: <GSList>;
 end;
 define C-pointer-type <GSList> => <_GSList>;
-
-
-define constant <GType> = <gsize>;
 
 
 define C-struct <_GTypeClass>
@@ -214,20 +213,6 @@ define C-function g-irepository-is-registered
 end;
 
 
-define C-struct <_GIBaseInfoStub>
-  slot _GIBaseInfoStub$dummy1 :: <C-signed-int>;
-  slot _GIBaseInfoStub$dummy2 :: <C-signed-int>;
-  slot _GIBaseInfoStub$dummy3 :: <C-void*>;
-  slot _GIBaseInfoStub$dummy4 :: <C-void*>;
-  slot _GIBaseInfoStub$dummy5 :: <C-void*>;
-  slot _GIBaseInfoStub$dummy6 :: <C-unsigned-int>;
-  slot _GIBaseInfoStub$dummy7 :: <C-unsigned-int>;
-  array slot _GIBaseInfoStub$padding :: <gpointer>, length: 4;
-end;
-define constant <_GIBaseInfo> = <_GIBaseInfoStub>;
-define C-pointer-type <GIBaseInfo> => <_GIBaseInfo>;
-
-
 define C-pointer-type <GIArgInfo> => <_GIBaseInfo>;
 define C-pointer-type <GICallableInfo> => <_GIBaseInfo>;
 define C-pointer-type <GIConstantInfo> => <_GIBaseInfo>;
@@ -260,28 +245,6 @@ define constant $GI-DIRECTION-INOUT = 2;
 define constant <GIFieldInfoFlags> = <C-int>;
 define constant $GI-FIELD-IS-READABLE = 1;
 define constant $GI-FIELD-IS-WRITABLE = 2;
-
-define constant <GIInfoType> = <C-int>;
-define constant $GI-INFO-TYPE-INVALID = 0;
-define constant $GI-INFO-TYPE-FUNCTION = 1;
-define constant $GI-INFO-TYPE-CALLBACK = 2;
-define constant $GI-INFO-TYPE-STRUCT = 3;
-define constant $GI-INFO-TYPE-BOXED = 4;
-define constant $GI-INFO-TYPE-ENUM = 5;
-define constant $GI-INFO-TYPE-FLAGS = 6;
-define constant $GI-INFO-TYPE-OBJECT = 7;
-define constant $GI-INFO-TYPE-INTERFACE = 8;
-define constant $GI-INFO-TYPE-CONSTANT = 9;
-define constant $GI-INFO-TYPE-INVALID-0 = 10;
-define constant $GI-INFO-TYPE-UNION = 11;
-define constant $GI-INFO-TYPE-VALUE = 12;
-define constant $GI-INFO-TYPE-SIGNAL = 13;
-define constant $GI-INFO-TYPE-VFUNC = 14;
-define constant $GI-INFO-TYPE-PROPERTY = 15;
-define constant $GI-INFO-TYPE-FIELD = 16;
-define constant $GI-INFO-TYPE-ARG = 17;
-define constant $GI-INFO-TYPE-TYPE = 18;
-define constant $GI-INFO-TYPE-UNRESOLVED = 19;
 
 define constant <GSignalFlags> = <C-int>;
 define constant $G-SIGNAL-RUN-FIRST = 1;
@@ -575,15 +538,6 @@ define C-function g-callable-info-get-return-attribute
   c-name: "g_callable_info_get_return_attribute";
 end;
 
-define C-struct <GIAttributeIter>
-  slot GIAttributeIter$data :: <C-void*>;
-  slot GIAttributeIter$data2 :: <C-void*>;
-  slot GIAttributeIter$data3 :: <C-void*>;
-  slot GIAttributeIter$data4 :: <C-void*>;
-end;
-
-define C-pointer-type <GIAttributeIter*> => <GIAttributeIter>;
-define C-pointer-type <char**> => <char*>;
 define C-function g-callable-info-iterate-return-attributes
   input parameter info :: <GICallableInfo>;
   input parameter iterator :: <GIAttributeIter*>;

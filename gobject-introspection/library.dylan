@@ -121,7 +121,6 @@ define module gobject-introspection
     <GIArgument>,
     <GIArrayType>,
     <GIAttributeIter>,
-    <GIBaseInfo>,
     <GICallableInfo>,
     <GIConstantInfo>,
     <GIDirection>,
@@ -576,6 +575,21 @@ define module gobject-introspection
     g-vfunc-info-get-signal,
     g-vfunc-info-invoke,
     gi-cclosure-marshal-generic;
+
+  export <GIBaseInfo>,
+    g-base-info-gtype-get-type,
+    g-base-info-ref,
+    g-base-info-unref,
+    g-base-info-get-type,
+    g-base-info-get-name,
+    g-base-info-get-namespace,
+    g-base-info-is-deprecated,
+    g-base-info-get-attribute,
+    g-base-info-iterate-attributes,
+    g-base-info-get-container,
+    g-base-info-get-typelib,
+    g-base-info-equal,
+    g-info-new;
 
   export <GITypelib>,
     g-typelib-new-from-memory,
