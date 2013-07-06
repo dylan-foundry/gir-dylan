@@ -3,6 +3,7 @@ executable: gir-dylan
 target-type: dll
 files: library
        gibaseinfo
+       girepository
        gitypelib
        gobject-introspection
 c-libraries: -lgirepository-1.0

@@ -139,11 +139,6 @@ define module gobject-introspection
     <GIObjectInfoUnrefFunction>,
     <GIPropertyInfo>,
     <GIRegisteredTypeInfo>,
-    <GIRepository>,
-    <GIRepositoryClass>,
-    <GIRepositoryError>,
-    <GIRepositoryLoadFlags>,
-    <GIRepositoryPrivate>,
     <GIScopeType>,
     <GISignalInfo>,
     <GIStructInfo>,
@@ -590,6 +585,13 @@ define module gobject-introspection
     g-base-info-get-typelib,
     g-base-info-equal,
     g-info-new;
+
+  export <GIRepository>,
+    <GIRepositoryClass>,
+    <GIRepositoryError>,
+    <GIRepositoryLoadFlags>,
+    <GIRepositoryPrivate>;
+
 
   export <GITypelib>,
     g-typelib-new-from-memory,
