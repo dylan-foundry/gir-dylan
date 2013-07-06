@@ -54,7 +54,7 @@ end;
 
 define C-function g-irepository-is-registered
   input parameter repository :: <GIRepository>;
-  input parameter namespace- :: <gchar*>;
+  input parameter namespace :: <gchar*>;
   input parameter version :: <gchar*>;
   result res :: <gboolean>;
   c-name: "g_irepository_is_registered";
@@ -62,7 +62,7 @@ end;
 
 define C-function g-irepository-find-by-name
   input parameter repository :: <GIRepository>;
-  input parameter namespace- :: <gchar*>;
+  input parameter namespace :: <gchar*>;
   input parameter name :: <gchar*>;
   result res :: <GIBaseInfo>;
   c-name: "g_irepository_find_by_name";
@@ -70,14 +70,14 @@ end;
 
 define C-function g-irepository-enumerate-versions
   input parameter repository :: <GIRepository>;
-  input parameter namespace- :: <gchar*>;
+  input parameter namespace :: <gchar*>;
   result res :: <GList>;
   c-name: "g_irepository_enumerate_versions";
 end;
 
 define C-function g-irepository-require
   input parameter repository :: <GIRepository>;
-  input parameter namespace- :: <gchar*>;
+  input parameter namespace :: <gchar*>;
   input parameter version :: <gchar*>;
   input parameter flags :: <GIRepositoryLoadFlags>;
   input parameter error :: <GError**>;
@@ -88,7 +88,7 @@ end;
 define C-function g-irepository-require-private
   input parameter repository :: <GIRepository>;
   input parameter typelib-dir :: <gchar*>;
-  input parameter namespace- :: <gchar*>;
+  input parameter namespace :: <gchar*>;
   input parameter version :: <gchar*>;
   input parameter flags :: <GIRepositoryLoadFlags>;
   input parameter error :: <GError**>;
@@ -98,7 +98,7 @@ end;
 
 define C-function g-irepository-get-dependencies
   input parameter repository :: <GIRepository>;
-  input parameter namespace- :: <gchar*>;
+  input parameter namespace :: <gchar*>;
   result res :: <gchar**>;
   c-name: "g_irepository_get_dependencies";
 end;
@@ -118,14 +118,14 @@ end;
 
 define C-function g-irepository-get-n-infos
   input parameter repository :: <GIRepository>;
-  input parameter namespace- :: <gchar*>;
+  input parameter namespace :: <gchar*>;
   result res :: <gint>;
   c-name: "g_irepository_get_n_infos";
 end;
 
 define C-function g-irepository-get-info
   input parameter repository :: <GIRepository>;
-  input parameter namespace- :: <gchar*>;
+  input parameter namespace :: <gchar*>;
   input parameter index :: <gint>;
   result res :: <GIBaseInfo>;
   c-name: "g_irepository_get_info";
@@ -140,28 +140,28 @@ end;
 
 define C-function g-irepository-get-typelib-path
   input parameter repository :: <GIRepository>;
-  input parameter namespace- :: <gchar*>;
+  input parameter namespace :: <gchar*>;
   result res :: <gchar*>;
   c-name: "g_irepository_get_typelib_path";
 end;
 
 define C-function g-irepository-get-shared-library
   input parameter repository :: <GIRepository>;
-  input parameter namespace- :: <gchar*>;
+  input parameter namespace :: <gchar*>;
   result res :: <gchar*>;
   c-name: "g_irepository_get_shared_library";
 end;
 
 define C-function g-irepository-get-c-prefix
   input parameter repository :: <GIRepository>;
-  input parameter namespace- :: <gchar*>;
+  input parameter namespace :: <gchar*>;
   result res :: <gchar*>;
   c-name: "g_irepository_get_c_prefix";
 end;
 
 define C-function g-irepository-get-version
   input parameter repository :: <GIRepository>;
-  input parameter namespace- :: <gchar*>;
+  input parameter namespace :: <gchar*>;
   result res :: <gchar*>;
   c-name: "g_irepository_get_version";
 end;
