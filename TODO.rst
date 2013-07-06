@@ -7,7 +7,6 @@ TODO
 * Convenient wrappers / translations for things that return
   lists, etc.
 * Add actual tests to the test suite.
-* Map ``char*``, ``gchar*`` to ``<C-string>``.
 * Hook up output parameters correctly (especially errors).
 * Revisit what is exported. We probably don't need to export
   the structs, just the pointers to them. We probably don't need

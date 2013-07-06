@@ -71,13 +71,13 @@ end;
 
 define C-function g-base-info-get-name
   input parameter info_ :: <GIBaseInfo>;
-  result res :: <gchar*>;
+  result res :: <C-string>;
   c-name: "g_base_info_get_name";
 end;
 
 define C-function g-base-info-get-namespace
   input parameter info_ :: <GIBaseInfo>;
-  result res :: <gchar*>;
+  result res :: <C-string>;
   c-name: "g_base_info_get_namespace";
 end;
 
@@ -89,8 +89,8 @@ end;
 
 define C-function g-base-info-get-attribute
   input parameter info_ :: <GIBaseInfo>;
-  input parameter name_ :: <gchar*>;
-  result res :: <gchar*>;
+  input parameter name_ :: <C-string>;
+  result res :: <C-string>;
   c-name: "g_base_info_get_attribute";
 end;
 

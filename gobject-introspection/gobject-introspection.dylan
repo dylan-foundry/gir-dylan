@@ -26,11 +26,9 @@ define constant <gushort> = <C-unsigned-short>;
 define constant <gssize> = <C-signed-long>;
 define constant <GQuark> = <guint32>;
 define constant <GType> = <gsize>;
-define C-pointer-type <char*> => <C-signed-char>;
-define C-pointer-type <char**> => <char*>;
-define C-pointer-type <gchar*> => <gchar>;
+define C-pointer-type <char**> => <C-string>;
 define C-pointer-type <gpointer*> => <gpointer>;
-define C-pointer-type <gchar**> => <gchar*>;
+define C-pointer-type <gchar**> => <C-string>;
 define C-pointer-type <guint8*> => <guint8>;
 
 
@@ -89,12 +87,12 @@ define constant $G-PARAM-DEPRECATED = 2147483648;
 
 define C-struct <_GParamSpec>
   slot _GParamSpec$g-type-instance :: <_GTypeInstance>;
-  slot _GParamSpec$name :: <gchar*>;
+  slot _GParamSpec$name :: <C-string>;
   slot _GParamSpec$flags :: <GParamFlags>;
   slot _GParamSpec$value-type :: <C-unsigned-long>;
   slot _GParamSpec$owner-type :: <C-unsigned-long>;
-  slot _GParamSpec$_nick :: <gchar*>;
-  slot _GParamSpec$_blurb :: <gchar*>;
+  slot _GParamSpec$_nick :: <C-string>;
+  slot _GParamSpec$_blurb :: <C-string>;
   slot _GParamSpec$qdata :: <GData>;
   slot _GParamSpec$ref-count :: <C-unsigned-int>;
   slot _GParamSpec$param-id :: <C-unsigned-int>;
@@ -148,7 +146,7 @@ define constant <GObjectClass> = <_GObjectClass>;
 define C-struct <_GError>
   slot _GError$domain :: <C-unsigned-int>;
   slot _GError$code :: <C-signed-int>;
-  slot _GError$message :: <gchar*>;
+  slot _GError$message :: <C-string>;
 end;
 define constant <GError> = <_GError>;
 define C-pointer-type <GError*> => <GError>;
@@ -339,8 +337,8 @@ end;
 
 define C-function g-callable-info-get-return-attribute
   input parameter info :: <GICallableInfo>;
-  input parameter name :: <gchar*>;
-  result res :: <gchar*>;
+  input parameter name :: <C-string>;
+  result res :: <C-string>;
   c-name: "g_callable_info_get_return_attribute";
 end;
 
@@ -417,7 +415,7 @@ define C-union <_GIArgument>
   slot _GIArgument$v-ulong :: <C-unsigned-long>;
   slot _GIArgument$v-ssize :: <C-signed-long>;
   slot _GIArgument$v-size :: <C-unsigned-long>;
-  slot _GIArgument$v-string :: <gchar*>;
+  slot _GIArgument$v-string :: <C-string>;
   slot _GIArgument$v-pointer :: <C-void*>;
 end;
 define C-pointer-type <GIArgument> => <_GIArgument>;
@@ -493,7 +491,7 @@ end;
 
 define C-function g-enum-info-get-error-domain
   input parameter info :: <GIEnumInfo>;
-  result res :: <gchar*>;
+  result res :: <C-string>;
   c-name: "g_enum_info_get_error_domain";
 end;
 
@@ -545,7 +543,7 @@ end;
 
 define C-function g-function-info-get-symbol
   input parameter info :: <GIFunctionInfo>;
-  result res :: <gchar*>;
+  result res :: <C-string>;
   c-name: "g_function_info_get_symbol";
 end;
 
@@ -638,7 +636,7 @@ end;
 
 define C-function g-interface-info-find-method
   input parameter info :: <GIInterfaceInfo>;
-  input parameter name :: <gchar*>;
+  input parameter name :: <C-string>;
   result res :: <GIFunctionInfo>;
   c-name: "g_interface_info_find_method";
 end;
@@ -671,7 +669,7 @@ end;
 
 define C-function g-interface-info-find-vfunc
   input parameter info :: <GIInterfaceInfo>;
-  input parameter name :: <gchar*>;
+  input parameter name :: <C-string>;
   result res :: <GIVFuncInfo>;
   c-name: "g_interface_info_find_vfunc";
 end;
@@ -702,13 +700,13 @@ define constant <GIObjectInfoGetValueFunction> = <C-function-pointer>;
 
 define C-function g-object-info-get-type-name
   input parameter info :: <GIObjectInfo>;
-  result res :: <gchar*>;
+  result res :: <C-string>;
   c-name: "g_object_info_get_type_name";
 end;
 
 define C-function g-object-info-get-type-init
   input parameter info :: <GIObjectInfo>;
-  result res :: <gchar*>;
+  result res :: <C-string>;
   c-name: "g_object_info_get_type_init";
 end;
 
@@ -784,14 +782,14 @@ end;
 
 define C-function g-object-info-find-method
   input parameter info :: <GIObjectInfo>;
-  input parameter name :: <gchar*>;
+  input parameter name :: <C-string>;
   result res :: <GIFunctionInfo>;
   c-name: "g_object_info_find_method";
 end;
 
 define C-function g-object-info-find-method-using-interfaces
   input parameter info :: <GIObjectInfo>;
-  input parameter name :: <gchar*>;
+  input parameter name :: <C-string>;
   input parameter implementor :: <GIObjectInfo*>;
   result res :: <GIFunctionInfo>;
   c-name: "g_object_info_find_method_using_interfaces";
@@ -812,7 +810,7 @@ end;
 
 define C-function g-object-info-find-signal
   input parameter info :: <GIObjectInfo>;
-  input parameter name :: <gchar*>;
+  input parameter name :: <C-string>;
   result res :: <GISignalInfo>;
   c-name: "g_object_info_find_signal";
 end;
@@ -832,14 +830,14 @@ end;
 
 define C-function g-object-info-find-vfunc
   input parameter info :: <GIObjectInfo>;
-  input parameter name :: <gchar*>;
+  input parameter name :: <C-string>;
   result res :: <GIVFuncInfo>;
   c-name: "g_object_info_find_vfunc";
 end;
 
 define C-function g-object-info-find-vfunc-using-interfaces
   input parameter info :: <GIObjectInfo>;
-  input parameter name :: <gchar*>;
+  input parameter name :: <C-string>;
   input parameter implementor :: <GIObjectInfo*>;
   result res :: <GIVFuncInfo>;
   c-name: "g_object_info_find_vfunc_using_interfaces";
@@ -866,7 +864,7 @@ end;
 
 define C-function g-object-info-get-ref-function
   input parameter info :: <GIObjectInfo>;
-  result res :: <char*>;
+  result res :: <C-string>;
   c-name: "g_object_info_get_ref_function";
 end;
 
@@ -878,7 +876,7 @@ end;
 
 define C-function g-object-info-get-unref-function
   input parameter info :: <GIObjectInfo>;
-  result res :: <char*>;
+  result res :: <C-string>;
   c-name: "g_object_info_get_unref_function";
 end;
 
@@ -890,7 +888,7 @@ end;
 
 define C-function g-object-info-get-set-value-function
   input parameter info :: <GIObjectInfo>;
-  result res :: <char*>;
+  result res :: <C-string>;
   c-name: "g_object_info_get_set_value_function";
 end;
 
@@ -902,7 +900,7 @@ end;
 
 define C-function g-object-info-get-get-value-function
   input parameter info :: <GIObjectInfo>;
-  result res :: <char*>;
+  result res :: <C-string>;
   c-name: "g_object_info_get_get_value_function";
 end;
 
@@ -932,13 +930,13 @@ end;
 
 define C-function g-registered-type-info-get-type-name
   input parameter info :: <GIRegisteredTypeInfo>;
-  result res :: <gchar*>;
+  result res :: <C-string>;
   c-name: "g_registered_type_info_get_type_name";
 end;
 
 define C-function g-registered-type-info-get-type-init
   input parameter info :: <GIRegisteredTypeInfo>;
-  result res :: <gchar*>;
+  result res :: <C-string>;
   c-name: "g_registered_type_info_get_type_init";
 end;
 
@@ -994,7 +992,7 @@ end;
 
 define C-function g-struct-info-find-method
   input parameter info :: <GIStructInfo>;
-  input parameter name :: <gchar*>;
+  input parameter name :: <C-string>;
   result res :: <GIFunctionInfo>;
   c-name: "g_struct_info_find_method";
 end;
@@ -1025,13 +1023,13 @@ end;
 
 define C-function g-type-tag-to-string
   input parameter type :: <GITypeTag>;
-  result res :: <gchar*>;
+  result res :: <C-string>;
   c-name: "g_type_tag_to_string";
 end;
 
 define C-function g-info-type-to-string
   input parameter type :: <GIInfoType>;
-  result res :: <gchar*>;
+  result res :: <C-string>;
   c-name: "g_info_type_to_string";
 end;
 
@@ -1137,7 +1135,7 @@ end;
 
 define C-function g-union-info-find-method
   input parameter info :: <GIUnionInfo>;
-  input parameter name :: <gchar*>;
+  input parameter name :: <C-string>;
   result res :: <GIFunctionInfo>;
   c-name: "g_union_info_find_method";
 end;

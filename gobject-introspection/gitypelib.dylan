@@ -42,7 +42,7 @@ end;
 
 define C-function g-typelib-symbol
   input parameter typelib_ :: <GITypelib>;
-  input parameter symbol-name_ :: <gchar*>;
+  input parameter symbol-name_ :: <C-string>;
   input parameter symbol_ :: <gpointer*>;
   result res :: <gboolean>;
   c-name: "g_typelib_symbol";
@@ -50,7 +50,7 @@ end;
 
 define C-function g-typelib-get-namespace
   input parameter typelib_ :: <GITypelib>;
-  result res :: <gchar*>;
+  result res :: <C-string>;
   c-name: "g_typelib_get_namespace";
 end;
 
