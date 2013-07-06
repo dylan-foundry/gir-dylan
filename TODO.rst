@@ -7,10 +7,11 @@ TODO
 * Convenient wrappers / translations for things that return
   lists, etc.
 * Add actual tests to the test suite.
-* Hook up output parameters correctly (especially errors).
 * Revisit what is exported. We probably don't need to export
   the structs, just the pointers to them. We probably don't need
   to export slot setters / getters.
 * Add something to make ``<GList>`` and ``<GSList>`` behave more
   like Dylan collections. Do we need to add bindings for the
   common functions for working with them?
+* Add a couple of helper methods for working with errors to
+  access the data on them.

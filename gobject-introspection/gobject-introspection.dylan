@@ -589,7 +589,7 @@ define C-function g-function-info-invoke
   input parameter out-args :: <GIArgument>;
   input parameter n-out-args :: <C-signed-int>;
   input parameter return-value :: <GIArgument>;
-  input parameter error :: <GError**>;
+  output parameter error :: <GError**>;
   result res :: <C-boolean>;
   c-name: "g_function_info_invoke";
 end;
@@ -1178,7 +1178,7 @@ end;
 define C-function g-vfunc-info-get-address
   input parameter info :: <GIVFuncInfo>;
   input parameter implementor-gtype :: <GType>;
-  input parameter error :: <GError**>;
+  output parameter error :: <GError**>;
   result res :: <gpointer>;
   c-name: "g_vfunc_info_get_address";
 end;
@@ -1191,7 +1191,7 @@ define C-function g-vfunc-info-invoke
   input parameter out-args :: <GIArgument>;
   input parameter n-out-args :: <C-signed-int>;
   input parameter return-value :: <GIArgument>;
-  input parameter error :: <GError**>;
+  output parameter error :: <GError**>;
   result res :: <C-boolean>;
   c-name: "g_vfunc_info_invoke";
 end;

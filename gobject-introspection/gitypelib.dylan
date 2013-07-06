@@ -11,7 +11,7 @@ define C-pointer-type <GITypelib> => <_GITypelib>;
 define C-function g-typelib-new-from-memory
   input parameter memory_ :: <guint8*>;
   input parameter len_ :: <gsize>;
-  input parameter error_ :: <GError**>;
+  output parameter error_ :: <GError**>;
   result res :: <GITypelib>;
   c-name: "g_typelib_new_from_memory";
 end;
@@ -19,7 +19,7 @@ end;
 define C-function g-typelib-new-from-const-memory
   input parameter memory_ :: <guint8*>;
   input parameter len_ :: <gsize>;
-  input parameter error_ :: <GError**>;
+  output parameter error_ :: <GError**>;
   result res :: <GITypelib>;
   c-name: "g_typelib_new_from_const_memory";
 end;
@@ -30,7 +30,7 @@ define C-pointer-type <GMappedFile> => <_GMappedFile>;
 
 define C-function g-typelib-new-from-mapped-file
   input parameter mfile_ :: <GMappedFile>;
-  input parameter error_ :: <GError**>;
+  output parameter error_ :: <GError**>;
   result res :: <GITypelib>;
   c-name: "g_typelib_new_from_mapped_file";
 end;

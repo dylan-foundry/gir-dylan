@@ -47,7 +47,7 @@ define C-function g-irepository-load-typelib
   input parameter repository :: <GIRepository>;
   input parameter typelib :: <GITypelib>;
   input parameter flags :: <GIRepositoryLoadFlags>;
-  input parameter error :: <GError**>;
+  output parameter error :: <GError**>;
   result res :: <C-string>;
   c-name: "g_irepository_load_typelib";
 end;
@@ -80,7 +80,7 @@ define C-function g-irepository-require
   input parameter namespace :: <C-string>;
   input parameter version :: <C-string>;
   input parameter flags :: <GIRepositoryLoadFlags>;
-  input parameter error :: <GError**>;
+  output parameter error :: <GError**>;
   result res :: <GITypelib>;
   c-name: "g_irepository_require";
 end;
@@ -91,7 +91,7 @@ define C-function g-irepository-require-private
   input parameter namespace :: <C-string>;
   input parameter version :: <C-string>;
   input parameter flags :: <GIRepositoryLoadFlags>;
-  input parameter error :: <GError**>;
+  output parameter error :: <GError**>;
   result res :: <GITypelib>;
   c-name: "g_irepository_require_private";
 end;
@@ -178,7 +178,7 @@ end;
 
 define C-function g-irepository-dump
   input parameter arg :: <C-string>;
-  input parameter error :: <GError**>;
+  output parameter error :: <GError**>;
   result res :: <C-boolean>;
   c-name: "g_irepository_dump";
 end;
