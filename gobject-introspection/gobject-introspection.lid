@@ -2,6 +2,7 @@ library: gobject-introspection
 executable: gir-dylan
 target-type: dll
 files: library
+       gitypelib
        gobject-introspection
 c-libraries: -lgirepository-1.0
              -lgobject-2.0

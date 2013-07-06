@@ -151,7 +151,6 @@ define module gobject-introspection
     <GITransfer>,
     <GITypeInfo>,
     <GITypeTag>,
-    <GITypelib>,
     <GIUnionInfo>,
     <GIVFuncInfo>,
     <GIVFuncInfoFlags>,
@@ -577,4 +576,13 @@ define module gobject-introspection
     g-vfunc-info-get-signal,
     g-vfunc-info-invoke,
     gi-cclosure-marshal-generic;
+
+  export <GITypelib>,
+    g-typelib-new-from-memory,
+    g-typelib-new-from-const-memory,
+    g-typelib-new-from-mapped-file,
+    g-typelib-free,
+    g-typelib-symbol,
+    g-typelib-get-namespace;
+
 end module;

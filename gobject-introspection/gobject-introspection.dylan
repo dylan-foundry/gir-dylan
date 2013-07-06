@@ -24,9 +24,11 @@ define constant <guint16> = <C-unsigned-short>;
 define constant <gshort> = <C-signed-short>;
 define constant <gushort> = <C-unsigned-short>;
 define constant <gssize> = <C-signed-long>;
+define constant <GQuark> = <guint32>;
 define C-pointer-type <gchar*> => <gchar>;
 define C-pointer-type <gpointer*> => <gpointer>;
 define C-pointer-type <gchar**> => <gchar*>;
+define C-pointer-type <guint8*> => <guint8>;
 
 
 define C-struct <_GList>
@@ -184,14 +186,6 @@ define C-function g-irepository-get-search-path
   result res :: <GSList>;
   c-name: "g_irepository_get_search_path";
 end;
-
-define C-struct <_GITypelib>
-end;
-define C-pointer-type <GITypelib> => <_GITypelib>;
-
-
-define constant <GQuark> = <guint32>;
-
 
 define C-struct <_GError>
   slot _GError$domain :: <C-unsigned-int>;
