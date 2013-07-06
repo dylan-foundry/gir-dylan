@@ -15,3 +15,5 @@ TODO
   common functions for working with them?
 * Add a couple of helper methods for working with errors to
   access the data on them.
+* Move more sets of functions to their own files like I did
+  with gibaseinfo, girepository and gitypelib.
