@@ -1,5 +1,8 @@
 TODO
-----
+====
+
+gobject-introspection
+---------------------
 
 * Remove struct definitions. We don't need or want access to
   struct members.
@@ -17,3 +20,18 @@ TODO
   access the data on them.
 * Move more sets of functions to their own files like I did
   with gibaseinfo, girepository and gitypelib.
+
+gir-generate-c-ffi
+------------------
+
+* Command line parser to let the user specify which namespace
+  to bind, as well as what version.
+* Error handling in the event that they give an invalid namespace
+  or version.
+* Make giving the version optional (use ``null-pointer(<C-string>)``
+  in that case.
+* Support all of the types of things that can be bound.
+* Support the right typeinfo translation for function args.
+* Figure out how to get the prefix in the right forms for methods,
+  structs, etc.
+* Everything else.
