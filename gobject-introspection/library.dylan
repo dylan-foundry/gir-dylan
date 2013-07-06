@@ -186,7 +186,6 @@ define module gobject-introspection
     <_GTypeInstance>,
     <_GValue>,
     <char**>,
-    <gboolean>,
     <gchar**>,
     <gchar>,
     <gdouble>,

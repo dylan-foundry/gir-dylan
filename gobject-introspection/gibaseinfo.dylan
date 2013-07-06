@@ -83,7 +83,7 @@ end;
 
 define C-function g-base-info-is-deprecated
   input parameter info_ :: <GIBaseInfo>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_base_info_is_deprecated";
 end;
 
@@ -99,7 +99,7 @@ define C-function g-base-info-iterate-attributes
   input parameter iterator_ :: <GIAttributeIter*>;
   input parameter name_ :: <char**>;
   input parameter value_ :: <char**>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_base_info_iterate_attributes";
 end;
 
@@ -118,7 +118,7 @@ end;
 define C-function g-base-info-equal
   input parameter info1_ :: <GIBaseInfo>;
   input parameter info2_ :: <GIBaseInfo>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_base_info_equal";
 end;
 

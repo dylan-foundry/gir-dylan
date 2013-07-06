@@ -15,7 +15,6 @@ define constant <guint64> = <C-unsigned-long>;
 define constant <gfloat> = <C-float>;
 define constant <gdouble> = <C-double>;
 define constant <guint32> = <C-unsigned-int>;
-define constant <gboolean> = <gint>;
 define constant <gint32> = <C-signed-int>;
 define constant <gint8> = <C-signed-char>;
 define constant <guint8> = <C-unsigned-char>;
@@ -248,31 +247,31 @@ end;
 
 define C-function g-arg-info-is-return-value
   input parameter info :: <GIArgInfo>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_arg_info_is_return_value";
 end;
 
 define C-function g-arg-info-is-optional
   input parameter info :: <GIArgInfo>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_arg_info_is_optional";
 end;
 
 define C-function g-arg-info-is-caller-allocates
   input parameter info :: <GIArgInfo>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_arg_info_is_caller_allocates";
 end;
 
 define C-function g-arg-info-may-be-null
   input parameter info :: <GIArgInfo>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_arg_info_may_be_null";
 end;
 
 define C-function g-arg-info-is-skip
   input parameter info :: <GIArgInfo>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_arg_info_is_skip";
 end;
 
@@ -347,7 +346,7 @@ define C-function g-callable-info-iterate-return-attributes
   input parameter iterator :: <GIAttributeIter*>;
   input parameter name :: <char**>;
   input parameter value :: <char**>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_callable_info_iterate_return_attributes";
 end;
 
@@ -359,13 +358,13 @@ end;
 
 define C-function g-callable-info-may-return-null
   input parameter info :: <GICallableInfo>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_callable_info_may_return_null";
 end;
 
 define C-function g-callable-info-skip-return
   input parameter info :: <GICallableInfo>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_callable_info_skip_return";
 end;
 
@@ -529,7 +528,7 @@ define C-function g-field-info-get-field
   input parameter field-info :: <GIFieldInfo>;
   input parameter mem :: <gpointer>;
   input parameter value :: <GIArgument>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_field_info_get_field";
 end;
 
@@ -537,7 +536,7 @@ define C-function g-field-info-set-field
   input parameter field-info :: <GIFieldInfo>;
   input parameter mem :: <gpointer>;
   input parameter value :: <GIArgument>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_field_info_set_field";
 end;
 
@@ -591,7 +590,7 @@ define C-function g-function-info-invoke
   input parameter n-out-args :: <C-signed-int>;
   input parameter return-value :: <GIArgument>;
   input parameter error :: <GError**>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_function_info_invoke";
 end;
 
@@ -712,13 +711,13 @@ end;
 
 define C-function g-object-info-get-abstract
   input parameter info :: <GIObjectInfo>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_object_info_get_abstract";
 end;
 
 define C-function g-object-info-get-fundamental
   input parameter info :: <GIObjectInfo>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_object_info_get_fundamental";
 end;
 
@@ -960,7 +959,7 @@ end;
 
 define C-function g-signal-info-true-stops-emit
   input parameter info :: <GISignalInfo>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_signal_info_true_stops_emit";
 end;
 
@@ -1011,13 +1010,13 @@ end;
 
 define C-function g-struct-info-is-gtype-struct
   input parameter info :: <GIStructInfo>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_struct_info_is_gtype_struct";
 end;
 
 define C-function g-struct-info-is-foreign
   input parameter info :: <GIStructInfo>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_struct_info_is_foreign";
 end;
 
@@ -1035,7 +1034,7 @@ end;
 
 define C-function g-type-info-is-pointer
   input parameter info :: <GITypeInfo>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_type_info_is_pointer";
 end;
 
@@ -1072,7 +1071,7 @@ end;
 
 define C-function g-type-info-is-zero-terminated
   input parameter info :: <GITypeInfo>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_type_info_is_zero_terminated";
 end;
 
@@ -1110,7 +1109,7 @@ end;
 
 define C-function g-union-info-is-discriminated
   input parameter info :: <GIUnionInfo>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_union_info_is_discriminated";
 end;
 
@@ -1193,7 +1192,7 @@ define C-function g-vfunc-info-invoke
   input parameter n-out-args :: <C-signed-int>;
   input parameter return-value :: <GIArgument>;
   input parameter error :: <GError**>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_vfunc_info_invoke";
 end;
 

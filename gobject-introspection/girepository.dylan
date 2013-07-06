@@ -56,7 +56,7 @@ define C-function g-irepository-is-registered
   input parameter repository :: <GIRepository>;
   input parameter namespace :: <C-string>;
   input parameter version :: <C-string>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_irepository_is_registered";
 end;
 
@@ -179,7 +179,7 @@ end;
 define C-function g-irepository-dump
   input parameter arg :: <C-string>;
   input parameter error :: <GError**>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_irepository_dump";
 end;
 

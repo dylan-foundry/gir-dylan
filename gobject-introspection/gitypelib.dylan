@@ -44,7 +44,7 @@ define C-function g-typelib-symbol
   input parameter typelib_ :: <GITypelib>;
   input parameter symbol-name_ :: <C-string>;
   input parameter symbol_ :: <gpointer*>;
-  result res :: <gboolean>;
+  result res :: <C-boolean>;
   c-name: "g_typelib_symbol";
 end;
 
