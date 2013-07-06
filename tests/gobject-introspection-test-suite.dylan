@@ -7,19 +7,19 @@ define constant $glib-namespace = "GLib";
 define constant $invalid-namespace = "InvalidNamespaceNameXXX";
 
 define suite gobject-introspection-test-suite ()
-  test inglib-namespace-yields-error;
-  test inglib-namespace-is-not-registered;
+  test invalid-namespace-yields-error;
+  test invalid-namespace-is-not-registered;
   test can-load-glib;
 end suite;
 
-define test inglib-namespace-yields-error ()
+define test invalid-namespace-yields-error ()
   let repo = g-irepository-get-default();
   let (typelib, error) = g-irepository-require(repo, $invalid-namespace, "2.0", 0);
   check-true("typelib should be null", null-pointer?(typelib));
   check-false("error should not be null", null-pointer?(error));
 end test;
 
-define test inglib-namespace-is-not-registered ()
+define test invalid-namespace-is-not-registered ()
   let repo = g-irepository-get-default();
   check-false("Is registered?", g-irepository-is-registered(repo, $invalid-namespace, "283832.0"));
 end test;
