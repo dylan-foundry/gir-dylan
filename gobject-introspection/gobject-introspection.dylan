@@ -50,12 +50,11 @@ define constant <GType> = <gsize>;
 define C-struct <_GTypeClass>
   slot _GTypeClass$g-type :: <C-unsigned-long>;
 end;
-define constant <GTypeClass> = <_GTypeClass>;
-define C-pointer-type <GTypeClass*> => <GTypeClass>;
+define C-pointer-type <GTypeClass> => <_GTypeClass>;
 
 
 define C-struct <_GTypeInstance>
-  slot _GTypeInstance$g-class :: <GTypeClass*>;
+  slot _GTypeInstance$g-class :: <GTypeClass>;
 end;
 define constant <GTypeInstance> = <_GTypeInstance>;
 

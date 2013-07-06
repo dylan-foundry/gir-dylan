@@ -11,9 +11,6 @@ TODO
 
 * Remove struct definitions. We don't need or want access to
   struct members.
-* Rename class types so that ``<_GObject>`` is the raw struct (if we
-  even have that) and ``<GObject>`` is the pointer to the struct.
-  * Partially done.
 * Modify how enumerations are handled so that they use ``one-of``.
 * Add back bindings for ``GITypelib`` and ``GIBaseInfo``.
 * Convenient wrappers / translations for things that return
