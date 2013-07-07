@@ -98,3 +98,22 @@ define method write-c-ffi (constant-info, type == $GI-INFO-TYPE-CONSTANT)
   format-out("define constant %s :: %s = %s;\n\n", dylan-name,
              dylan-type, value);
 end method;
+
+define method write-c-ffi (enum-info, type == $GI-INFO-TYPE-ENUM)
+ => ()
+  let value-names = #[];
+  let num-values = g-enum-info-get-n-values(enum-info);
+  for (i from 0 below num-values)
+    let value = g-enum-info-get-value(enum-info, i);
+    let name = g-base-info-get-attribute(value, "c:identifier");
+    let dylan-name = map-name(#"constant", "", name, #[]);
+    value-names := add!(value-names, dylan-name);
+    let integer-value = g-value-info-get-value(value);
+    format-out("define constant %s :: <integer> = %d\n", dylan-name, integer-value);
+    g-base-info-unref(value);
+  end for;
+  let enum-name  = g-base-info-get-name(enum-info);
+  let dylan-enum-name = map-name(#"type", "", enum-name, #[]);
+  let joined-value-names = join(value-names, ", ");
+  format-out("define constant %s = one-of(%s);\n\n", dylan-enum-name, joined-value-names);
+end method;
