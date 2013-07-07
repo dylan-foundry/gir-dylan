@@ -87,3 +87,14 @@ define function map-to-dylan-type (typeinfo) => (str :: <string>)
   // XXX: This is clearly an incorrect implementation.
   g-type-tag-to-string(g-type-info-get-tag(typeinfo));
 end function;
+
+define method write-c-ffi (constant-info, type == $GI-INFO-TYPE-CONSTANT)
+ => ()
+  let name = g-base-info-get-name(constant-info);
+  let dylan-name = map-name(#"constant", "", name, #[]);
+  let type = g-constant-info-get-type(constant-info);
+  let dylan-type = map-to-dylan-type(type);
+  let value = "XXX";
+  format-out("define constant %s :: %s = %s;\n\n", dylan-name,
+             dylan-type, value);
+end method;
