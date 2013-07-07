@@ -57,24 +57,33 @@ define function direction-to-string (direction) => (dir :: <string>)
   end select;
 end function;
 
-define method write-c-ffi (info, type == $GI-INFO-TYPE-FUNCTION)
+define method write-c-ffi (function-info, type == $GI-INFO-TYPE-FUNCTION)
  => ()
-  let name = g-base-info-get-name(info);
-  let dylan-name = name;
+  let name = g-base-info-get-name(function-info);
+  let dylan-name = map-name(#"function", "", name, #[]);
   format-out("define C-function %s\n", dylan-name);
-  let num-args = g-callable-info-get-n-args(info);
+  let num-args = g-callable-info-get-n-args(function-info);
   for (i from 0 below num-args)
-    let arg = g-callable-info-get-arg(info, i);
-    let name = g-base-info-get-name(arg);
-    let type = "<object>";
+    let arg = g-callable-info-get-arg(function-info, i);
+    let arg-name = g-base-info-get-name(arg);
+    let arg-type = map-to-dylan-type(g-arg-info-get-type(arg));
     if (g-arg-info-is-return-value(arg))
-      format-out("  result %s :: %s;\n", name, type);
+      // XXX: We don't handle this. When does this happen?
     else
       let direction = direction-to-string(g-arg-info-get-direction(arg));
-      format-out("  %s parameter %s :: %s;\n", direction, name, type);
+      format-out("  %s parameter %s :: %s;\n", direction, arg-name, arg-type);
     end if;
     g-base-info-unref(arg);
   end for;
-  format-out("  c-name: \"%s\";\n", name);
+  let result-type = g-callable-info-get-return-type(function-info);
+  let dylan-result-type = map-to-dylan-type(result-type);
+  format-out("  result res :: %s;\n", dylan-result-type);
+  let symbol = g-function-info-get-symbol(function-info);
+  format-out("  c-name: \"%s\";\n", symbol);
   format-out("end;\n\n");
 end method;
+
+define function map-to-dylan-type (typeinfo) => (str :: <string>)
+  // XXX: This is clearly an incorrect implementation.
+  g-type-tag-to-string(g-type-info-get-tag(typeinfo));
+end function;
