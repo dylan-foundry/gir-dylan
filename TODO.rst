@@ -34,4 +34,5 @@ gir-generate-c-ffi
 * Support the right typeinfo translation for function args.
 * Figure out how to get the prefix in the right forms for methods,
   structs, etc.
+* Generate ``library.dylan``.
 * Everything else.
