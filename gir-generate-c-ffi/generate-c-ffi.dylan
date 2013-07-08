@@ -117,3 +117,9 @@ define method write-c-ffi (enum-info, type == $GI-INFO-TYPE-ENUM)
   let joined-value-names = join(value-names, ", ");
   format-out("define constant %s = one-of(%s);\n\n", dylan-enum-name, joined-value-names);
 end method;
+
+define method write-c-ffi (flags-info, type == $GI-INFO-TYPE-FLAGS)
+ => ()
+  // This is the same as an enum
+  write-c-ffi(flags-info, $GI-INFO-TYPE-ENUM)
+end method;
