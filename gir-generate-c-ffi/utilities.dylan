@@ -30,3 +30,16 @@ define method map-name
   if (category == #"type") add!(buffer, '>') end if;
   as(<byte-string>, buffer);
 end method map-name;
+
+define function direction-to-string (direction) => (dir :: <string>)
+  select (direction)
+    $GI-DIRECTION-IN => "input";
+    $GI-DIRECTION-OUT => "output";
+    $GI-DIRECTION-INOUT => "input output";
+  end select;
+end function;
+
+define function map-to-dylan-type (typeinfo) => (str :: <string>)
+  // XXX: This is clearly an incorrect implementation.
+  g-type-tag-to-string(g-type-info-get-tag(typeinfo));
+end function;
