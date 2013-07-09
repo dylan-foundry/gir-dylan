@@ -3,15 +3,26 @@ synopsis: generate c-ffi bindings using gobject-introspection
 author: Bruce Mitchener, Jr.
 copyright: See LICENSE file in this distribution.
 
+define class <context> (<object>)
+  slot exported-bindings = #();
+end class;
+
+define function add-exported-binding
+    (context :: <context>, binding-name :: <string>)
+ => ()
+  context.exported-bindings := add(context.exported-bindings, binding-name);
+end function;
+
 define function generate-c-ffi
     (namespace :: <string>, version :: <string>)
  => ()
   let repo = g-irepository-get-default();
+  let context = make(<context>);
   let count = g-irepository-get-n-infos(repo, namespace);
   for (i from 0 below count)
     let info = g-irepository-get-info(repo, namespace, i);
     let type = g-base-info-get-type(info);
-    write-c-ffi(info, type);
+    write-c-ffi(context, info, type);
     force-output(*standard-output*);
   end for;
 end function;
@@ -42,28 +53,29 @@ define function name-for-type (type) => (name :: <string>)
   end select
 end function;
 
-define method write-c-ffi (info, type)
+define method write-c-ffi (context, info, type)
  => ()
   let name = g-base-info-get-name(info);
   let type-name = name-for-type(type);
   format-out("// Not set up yet for %s %s\n\n", type-name, name);
 end method;
 
-define method write-c-ffi (boxed-info, type == $GI-INFO-TYPE-BOXED)
+define method write-c-ffi (context, boxed-info, type == $GI-INFO-TYPE-BOXED)
  => ()
   // This is the same as a struct
-  write-c-ffi(boxed-info, $GI-INFO-TYPE-STRUCT);
+  write-c-ffi(context, boxed-info, $GI-INFO-TYPE-STRUCT);
 end method;
 
-define method write-c-ffi (callback-info, type == $GI-INFO-TYPE-CALLBACK)
+define method write-c-ffi (context, callback-info, type == $GI-INFO-TYPE-CALLBACK)
  => ()
   // We don't need to do anything for a callback. I think.
 end method;
 
-define method write-c-ffi (constant-info, type == $GI-INFO-TYPE-CONSTANT)
+define method write-c-ffi (context, constant-info, type == $GI-INFO-TYPE-CONSTANT)
  => ()
   let name = g-base-info-get-name(constant-info);
   let dylan-name = map-name(#"constant", "", name, #[]);
+  add-exported-binding(context, dylan-name);
   let type = g-constant-info-get-type(constant-info);
   let dylan-type = map-to-dylan-type(type);
   let value = "XXX";
@@ -71,7 +83,7 @@ define method write-c-ffi (constant-info, type == $GI-INFO-TYPE-CONSTANT)
              dylan-type, value);
 end method;
 
-define method write-c-ffi (enum-info, type == $GI-INFO-TYPE-ENUM)
+define method write-c-ffi (context, enum-info, type == $GI-INFO-TYPE-ENUM)
  => ()
   let value-names = #[];
   let num-values = g-enum-info-get-n-values(enum-info);
@@ -79,6 +91,7 @@ define method write-c-ffi (enum-info, type == $GI-INFO-TYPE-ENUM)
     let value = g-enum-info-get-value(enum-info, i);
     let name = g-base-info-get-attribute(value, "c:identifier");
     let dylan-name = map-name(#"constant", "", name, #[]);
+    add-exported-binding(context, dylan-name);
     value-names := add!(value-names, dylan-name);
     let integer-value = g-value-info-get-value(value);
     format-out("define constant %s :: <integer> = %d\n", dylan-name, integer-value);
@@ -86,20 +99,22 @@ define method write-c-ffi (enum-info, type == $GI-INFO-TYPE-ENUM)
   end for;
   let enum-name  = g-base-info-get-name(enum-info);
   let dylan-enum-name = map-name(#"type", "", enum-name, #[]);
+  add-exported-binding(context, dylan-enum-name);
   let joined-value-names = join(value-names, ", ");
   format-out("define constant %s = one-of(%s);\n\n", dylan-enum-name, joined-value-names);
 end method;
 
-define method write-c-ffi (flags-info, type == $GI-INFO-TYPE-FLAGS)
+define method write-c-ffi (context, flags-info, type == $GI-INFO-TYPE-FLAGS)
  => ()
   // This is the same as an enum
-  write-c-ffi(flags-info, $GI-INFO-TYPE-ENUM)
+  write-c-ffi(context, flags-info, $GI-INFO-TYPE-ENUM)
 end method;
 
-define method write-c-ffi (function-info, type == $GI-INFO-TYPE-FUNCTION)
+define method write-c-ffi (context, function-info, type == $GI-INFO-TYPE-FUNCTION)
  => ()
   let name = g-base-info-get-name(function-info);
   let dylan-name = map-name(#"function", "", name, #[]);
+  add-exported-binding(context, dylan-name);
   format-out("define C-function %s\n", dylan-name);
   let num-args = g-callable-info-get-n-args(function-info);
   for (i from 0 below num-args)
@@ -122,22 +137,22 @@ define method write-c-ffi (function-info, type == $GI-INFO-TYPE-FUNCTION)
   format-out("end;\n\n");
 end method;
 
-define method write-c-ffi (interface-info, type == $GI-INFO-TYPE-INTERFACE)
+define method write-c-ffi (context, interface-info, type == $GI-INFO-TYPE-INTERFACE)
  => ()
   format-out("interface\n");
 end method;
 
-define method write-c-ffi (object-info, type == $GI-INFO-TYPE-OBJECT)
+define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
  => ()
   format-out("object\n");
 end method;
 
-define method write-c-ffi (struct-info, type == $GI-INFO-TYPE-STRUCT)
+define method write-c-ffi (context, struct-info, type == $GI-INFO-TYPE-STRUCT)
  => ()
   format-out("struct\n");
 end method;
 
-define method write-c-ffi (union-info, type == $GI-INFO-TYPE-UNION)
+define method write-c-ffi (context, union-info, type == $GI-INFO-TYPE-UNION)
  => ()
   format-out("union\n");
 end method;
