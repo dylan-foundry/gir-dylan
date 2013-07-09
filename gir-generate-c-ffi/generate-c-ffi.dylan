@@ -80,7 +80,10 @@ define method write-c-ffi (context, constant-info, type == $GI-INFO-TYPE-CONSTAN
   add-exported-binding(context, dylan-name);
   let type = g-constant-info-get-type(constant-info);
   let dylan-type = map-to-dylan-type(type);
-  let value = "XXX";
+  let arg = make(<GIArgument>);
+  let type-tag = g-type-info-get-tag(type);
+  g-constant-info-get-value(constant-info, arg);
+  let value = convert-gi-argument(arg, type-tag);
   format(context.output-stream, "define constant %s :: %s = %s;\n\n", dylan-name,
              dylan-type, value);
 end method;
