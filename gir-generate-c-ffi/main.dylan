@@ -28,7 +28,7 @@ end;
 define function main (arguments :: <sequence>)
   let parser = parse-args(arguments);
   let namespaces = positional-options(parser);
-  let version = get-option-value(parser, "version") | null-pointer(<C-string>);
+  let version = as(<C-string>, get-option-value(parser, "version") | null-pointer(<C-string>));
   // XXX: Fail nicely if no namespaces.
   // XXX: Fail if they specify a version and more than one namespace.
   for (namespace in namespaces)
