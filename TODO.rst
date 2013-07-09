@@ -37,4 +37,5 @@ gir-generate-c-ffi
   C?
 * Generate output into a directory of files for each namespace
   being generated rather than stdout.
+* Fields might be arrays and need to be mapped to array slots.
 * Everything else.
