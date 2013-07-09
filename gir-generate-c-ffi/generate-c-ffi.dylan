@@ -153,7 +153,7 @@ define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
   let num-fields = g-object-info-get-n-fields(object-info);
   for (i from 0 below num-fields)
     let field = g-object-info-get-field(object-info, i);
-    write-c-ffi-field(context, field, object-info);
+    write-c-ffi-field(context, field, name);
   end for;
   format(context.output-stream, "end C-struct\n\n");
   let num-methods = g-object-info-get-n-methods(object-info);
@@ -172,7 +172,7 @@ define method write-c-ffi (context, struct-info, type == $GI-INFO-TYPE-STRUCT)
   let num-fields = g-struct-info-get-n-fields(struct-info);
   for (i from 0 below num-fields)
     let field = g-struct-info-get-field(struct-info, i);
-    write-c-ffi-field(context, field, struct-info);
+    write-c-ffi-field(context, field, name);
   end for;
   format(context.output-stream, "end C-struct\n\n");
   let num-methods = g-struct-info-get-n-methods(struct-info);
@@ -187,12 +187,33 @@ define method write-c-ffi (context, union-info, type == $GI-INFO-TYPE-UNION)
   format(context.output-stream, "union\n");
 end method;
 
-define function write-c-ffi-field (context, field, container) => ()
+define function field-is-writable? (field) => (writable? :: <boolean>)
+  let field-flags = g-field-info-get-flags(field);
+  logand(field-flags, $GI-FIELD-IS-WRITABLE) ~= 0
+end function field-is-writable?;
+
+define function field-is-readable? (field) => (readable? :: <boolean>)
+  let field-flags = g-field-info-get-flags(field);
+  logand(field-flags, $GI-FIELD-IS-READABLE) ~= 0
+end function field-is-readable?;
+
+define function write-c-ffi-field (context, field, container-name) => ()
   let field-name = map-name(#"field", "", g-base-info-get-name(field), #[]);
+  let slot-name = concatenate(container-name, "-", field-name);
   let field-type = map-to-dylan-type(g-field-info-get-type(field));
-  // XXX: Check field flags, if not writable, flag as constant.
+  let writable? = field-is-writable?(field);
+  let readable? = field-is-readable?(field);
   // XXX: Consider prefixing the name with the struct name.
-  // XXX: Need to export these bindings (field getter and setter), but again,
-  //      that should check readable / writable flags.
-  format(context.output-stream, "  slot %s :: %s;\n", field-name, field-type);
+  if (readable?)
+    add-exported-binding(context, slot-name);
+  end;
+  if (writable?)
+    let setter-name = concatenate(slot-name, "-setter");
+    add-exported-binding(context, setter-name);
+  end;
+
+  format(context.output-stream, "  %sslot %s :: %s;\n",
+         if (writable?) "" else "constant " end if,
+         slot-name,
+         field-type);
 end function;
