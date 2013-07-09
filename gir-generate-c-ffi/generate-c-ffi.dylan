@@ -114,8 +114,8 @@ end method;
 
 define method write-c-ffi (context, function-info, type == $GI-INFO-TYPE-FUNCTION)
  => ()
-  let name = g-base-info-get-name(function-info);
-  let dylan-name = map-name(#"function", "", name, #[]);
+  let symbol = g-function-info-get-symbol(function-info);
+  let dylan-name = map-name(#"function", "", symbol, #[]);
   add-exported-binding(context, dylan-name);
   format(context.output-stream, "define C-function %s\n", dylan-name);
   let num-args = g-callable-info-get-n-args(function-info);
