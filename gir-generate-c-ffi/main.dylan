@@ -32,20 +32,28 @@ define function main (arguments :: <sequence>)
   // XXX: Fail nicely if no namespaces.
   // XXX: Fail if they specify a version and more than one namespace.
   for (namespace in namespaces)
-    load-typelib(namespace, version);
-    generate-c-ffi(namespace, version);
+    if (load-typelib(namespace, version))
+      generate-c-ffi(namespace, version);
+    end if;
   end for;
 end function;
 
 define function load-typelib
     (namespace :: <string>, version :: <string>)
- => ()
+ => (loaded? :: <boolean>)
   let repo = g-irepository-get-default();
-  // XXX: Check to see if the namespace is valid via g-irepository-is-registered()?
   let (typelib, error) = g-irepository-require(repo, namespace, version, 0);
   if (~null-pointer?(error) | null-pointer?(typelib))
-    // XXX: signal an error
-  end if;
+    if (null-pointer?(version))
+      format(*standard-error*, "No versions of %s are available.\n", namespace);
+    else
+      format(*standard-error*, "Version %s of %s is not available.\n", version, namespace);
+    end if;
+    force-output(*standard-error*);
+    #f
+  else
+    #t
+  end if
 end function;
 
 main(application-arguments());
