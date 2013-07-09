@@ -114,29 +114,7 @@ end method;
 
 define method write-c-ffi (context, function-info, type == $GI-INFO-TYPE-FUNCTION)
  => ()
-  let symbol = g-function-info-get-symbol(function-info);
-  let dylan-name = map-name(#"function", "", symbol, #[]);
-  add-exported-binding(context, dylan-name);
-  format(context.output-stream, "define C-function %s\n", dylan-name);
-  let num-args = g-callable-info-get-n-args(function-info);
-  for (i from 0 below num-args)
-    let arg = g-callable-info-get-arg(function-info, i);
-    let arg-name = g-base-info-get-name(arg);
-    let arg-type = map-to-dylan-type(g-arg-info-get-type(arg));
-    if (g-arg-info-is-return-value(arg))
-      // XXX: We don't handle this. When does this happen?
-    else
-      let direction = direction-to-string(g-arg-info-get-direction(arg));
-      format(context.output-stream, "  %s parameter %s :: %s;\n", direction, arg-name, arg-type);
-    end if;
-    g-base-info-unref(arg);
-  end for;
-  let result-type = g-callable-info-get-return-type(function-info);
-  let dylan-result-type = map-to-dylan-type(result-type);
-  format(context.output-stream, "  result res :: %s;\n", dylan-result-type);
-  let symbol = g-function-info-get-symbol(function-info);
-  format(context.output-stream, "  c-name: \"%s\";\n", symbol);
-  format(context.output-stream, "end;\n\n");
+  write-c-ffi-function(context, function-info, #f);
 end method;
 
 define method write-c-ffi (context, interface-info, type == $GI-INFO-TYPE-INTERFACE)
@@ -159,7 +137,7 @@ define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
   let num-methods = g-object-info-get-n-methods(object-info);
   for (i from 0 below num-methods)
     let function-info = g-object-info-get-method(object-info, i);
-    write-c-ffi(context, function-info, $GI-INFO-TYPE-FUNCTION);
+    write-c-ffi-function(context, function-info, dylan-name);
   end for;
 end method;
 
@@ -178,7 +156,7 @@ define method write-c-ffi (context, struct-info, type == $GI-INFO-TYPE-STRUCT)
   let num-methods = g-struct-info-get-n-methods(struct-info);
   for (i from 0 below num-methods)
     let function-info = g-struct-info-get-method(struct-info, i);
-    write-c-ffi(context, function-info, $GI-INFO-TYPE-FUNCTION);
+    write-c-ffi-function(context, function-info, dylan-name);
   end for;
 end method;
 
@@ -216,4 +194,33 @@ define function write-c-ffi-field (context, field, container-name) => ()
          if (writable?) "" else "constant " end if,
          slot-name,
          field-type);
+end function;
+
+define function write-c-ffi-function (context, function-info, container-name) => ()
+  let symbol = g-function-info-get-symbol(function-info);
+  let dylan-name = map-name(#"function", "", symbol, #[]);
+  add-exported-binding(context, dylan-name);
+  format(context.output-stream, "define C-function %s\n", dylan-name);
+  if (logand(g-function-info-get-flags(function-info), $GI-FUNCTION-IS-METHOD) ~= 0)
+    format(context.output-stream, "  input parameter self :: %s;\n", container-name);
+  end if;
+  let num-args = g-callable-info-get-n-args(function-info);
+  for (i from 0 below num-args)
+    let arg = g-callable-info-get-arg(function-info, i);
+    let arg-name = g-base-info-get-name(arg);
+    let arg-type = map-to-dylan-type(g-arg-info-get-type(arg));
+    if (g-arg-info-is-return-value(arg))
+      // XXX: We don't handle this. When does this happen?
+    else
+      let direction = direction-to-string(g-arg-info-get-direction(arg));
+      format(context.output-stream, "  %s parameter %s :: %s;\n", direction, arg-name, arg-type);
+    end if;
+    g-base-info-unref(arg);
+  end for;
+  let result-type = g-callable-info-get-return-type(function-info);
+  let dylan-result-type = map-to-dylan-type(result-type);
+  format(context.output-stream, "  result res :: %s;\n", dylan-result-type);
+  let symbol = g-function-info-get-symbol(function-info);
+  format(context.output-stream, "  c-name: \"%s\";\n", symbol);
+  format(context.output-stream, "end;\n\n");
 end function;
