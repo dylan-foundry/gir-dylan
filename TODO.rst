@@ -24,15 +24,17 @@ gobject-introspection
 gir-generate-c-ffi
 ------------------
 
-* Command line parser to let the user specify which namespace
-  to bind, as well as what version.
+* Command line parsing issues (marked with XXX in main.dylan)
 * Error handling in the event that they give an invalid namespace
   or version.
-* Make giving the version optional (use ``null-pointer(<C-string>)``
-  in that case.
 * Support all of the types of things that can be bound.
-* Support the right typeinfo translation for function args.
+* Support the right typeinfo translation for function args. Some
+  are still marked with XXX to indicate that they aren't correct.
 * Figure out how to get the prefix in the right forms for methods,
   structs, etc.
 * Generate ``library.dylan``.
+* How to get the value for a constant? Do we need a bit of custom
+  C?
+* Generate output into a directory of files for each namespace
+  being generated rather than stdout.
 * Everything else.
