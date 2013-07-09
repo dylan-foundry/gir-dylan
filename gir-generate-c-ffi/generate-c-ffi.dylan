@@ -151,7 +151,27 @@ end method;
 
 define method write-c-ffi (context, struct-info, type == $GI-INFO-TYPE-STRUCT)
  => ()
-  format(context.output-stream, "struct\n");
+  let name = g-base-info-get-name(struct-info);
+  let dylan-name = map-name(#"function", "", name, #[]);
+  add-exported-binding(context, dylan-name);
+  format(context.output-stream, "define C-struct %s\n", dylan-name);
+  let num-fields = g-struct-info-get-n-fields(struct-info);
+  for (i from 0 below num-fields)
+    let field = g-struct-info-get-field(struct-info, i);
+    let field-name = map-name(#"field", "", g-base-info-get-name(field), #[]);
+    let field-type = map-to-dylan-type(g-field-info-get-type(field));
+    // XXX: Check field flags, if not writable, flag as constant.
+    // XXX: Consider prefixing the name with the struct name.
+    // XXX: Need to export these bindings (field getter and setter), but again,
+    //      that should check readable / writable flags.
+    format(context.output-stream, "  slot %s :: %s;\n", field-name, field-type);
+  end for;
+  format(context.output-stream, "end C-struct\n\n");
+  let num-methods = g-struct-info-get-n-methods(struct-info);
+  for (i from 0 below num-methods)
+    // XXX: Output the method. This should share code with outputting a function
+    //      probably?
+  end for;
 end method;
 
 define method write-c-ffi (context, union-info, type == $GI-INFO-TYPE-UNION)
