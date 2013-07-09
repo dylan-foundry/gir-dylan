@@ -65,3 +65,30 @@ define function map-to-dylan-type (typeinfo) => (str :: <string>)
     $GI-TYPE-TAG-UNICHAR => "<C-XXX-unichar>";
   end select
 end function;
+
+define function convert-gi-argument (argument, type) => (value)
+  select (type)
+    $GI-TYPE-TAG-VOID => "XXX";
+    $GI-TYPE-TAG-BOOLEAN => argument._GIArgument$v-boolean;
+    $GI-TYPE-TAG-INT8 => argument._GIArgument$v-int8;
+    $GI-TYPE-TAG-UINT8 => argument._GIArgument$v-uint8;
+    $GI-TYPE-TAG-INT16 => argument._GIArgument$v-int16;
+    $GI-TYPE-TAG-UINT16 => argument._GIArgument$v-uint16;
+    $GI-TYPE-TAG-INT32 => argument._GIArgument$v-int32;
+    $GI-TYPE-TAG-UINT32 => argument._GIArgument$v-uint32;
+    $GI-TYPE-TAG-INT64 => argument._GIArgument$v-int64;
+    $GI-TYPE-TAG-UINT64 => argument._GIArgument$v-uint64;
+    $GI-TYPE-TAG-FLOAT => argument._GIArgument$v-float;
+    $GI-TYPE-TAG-DOUBLE => argument._GIArgument$v-double;
+    $GI-TYPE-TAG-GTYPE => "XXX";
+    $GI-TYPE-TAG-UTF8 => concatenate("\"", argument._GIArgument$v-string, "\"");
+    $GI-TYPE-TAG-FILENAME => concatenate("\"", argument._GIArgument$v-string, "\"");
+    $GI-TYPE-TAG-ARRAY => "XXX";
+    $GI-TYPE-TAG-INTERFACE => "XXX";
+    $GI-TYPE-TAG-GLIST => "XXX";
+    $GI-TYPE-TAG-GSLIST => "XXX";
+    $GI-TYPE-TAG-GHASH => "XXX";
+    $GI-TYPE-TAG-ERROR => "XXX";
+    $GI-TYPE-TAG-UNICHAR => "XXX>";
+  end select
+end function convert-gi-argument;
