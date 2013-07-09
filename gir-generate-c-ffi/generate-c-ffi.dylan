@@ -15,18 +15,86 @@ define function add-exported-binding
   context.exported-bindings := add(context.exported-bindings, binding-name);
 end function;
 
+define function make-target-path (project-dir, #rest args) => (target)
+  merge-locators(as(<file-locator>, apply(concatenate, args)),
+                 project-dir);
+end function;
+
+define function make-project-name
+    (workspace :: <string>, version :: <string>,
+     #key include-dylan = #f)
+ => (name :: <string>)
+  if (include-dylan)
+    concatenate(workspace, "-dylan")
+  else
+    workspace
+  end if
+end function;
+
 define function generate-c-ffi
     (namespace :: <string>, version :: <string>)
  => ()
-  let repo = g-irepository-get-default();
-  let context = make(<context>, stream: *standard-output*);
-  let count = g-irepository-get-n-infos(repo, namespace);
-  for (i from 0 below count)
-    let info = g-irepository-get-info(repo, namespace, i);
-    let type = g-base-info-get-type(info);
-    write-c-ffi(context, info, type);
-    force-output(context.output-stream);
-  end for;
+  let project-dir = generate-directory(namespace, version);
+  let exported-bindings = generate-dylan-file(project-dir, namespace, version);
+  generate-library-file(project-dir, namespace, version, exported-bindings);
+  generate-lid-file(project-dir, namespace, version);
+end function;
+
+define function generate-directory
+    (namespace :: <string>, version :: <string>)
+ => (project-dir :: <directory-locator>)
+  let project-dir = subdirectory-locator(working-directory(),
+                                         make-project-name(namespace, version, include-dylan: #t));
+  ensure-directories-exist(project-dir);
+  project-dir
+end function;
+
+define function generate-dylan-file
+    (project-dir :: <directory-locator>,
+     namespace :: <string>,
+     version :: <string>)
+ => (exported-bindings :: <sequence>)
+  let project-name = make-project-name(namespace, version);
+  let target-path = make-target-path(project-dir, project-name, ".dylan");
+  with-open-file (stream = target-path, direction: #"output",
+                  if-does-not-exist: #"create")
+    let repo = g-irepository-get-default();
+    let context = make(<context>, stream: stream);
+    let count = g-irepository-get-n-infos(repo, namespace);
+    for (i from 0 below count)
+      let info = g-irepository-get-info(repo, namespace, i);
+      let type = g-base-info-get-type(info);
+      write-c-ffi(context, info, type);
+      force-output(context.output-stream);
+    end for;
+    context.exported-bindings
+  end with-open-file
+end function;
+
+define function generate-library-file
+    (project-dir :: <directory-locator>,
+     namespace :: <string>,
+     version :: <string>,
+     exported-bindings :: <sequence>)
+ => ()
+  let target-path = make-target-path(project-dir, "library.dylan");
+  with-open-file (stream = target-path, direction: #"output",
+                  if-does-not-exist: #"create")
+    // XXX: Real file contents.
+  end with-open-file;
+end function;
+
+define function generate-lid-file
+    (project-dir :: <directory-locator>,
+     namespace :: <string>,
+     version :: <string>)
+ => ()
+  let project-name = make-project-name(namespace, version, include-dylan: #t);
+  let target-path = make-target-path(project-dir, project-name, ".lid");
+  with-open-file (stream = target-path, direction: #"output",
+                  if-does-not-exist: #"create")
+    // XXX: Real file contents.
+  end with-open-file;
 end function;
 
 define function name-for-type (type) => (name :: <string>)

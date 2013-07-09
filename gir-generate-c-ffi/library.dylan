@@ -8,6 +8,7 @@ define library gir-generate-c-ffi
   use gobject-introspection;
   use command-line-parser;
   use io;
+  use system;
 
   export gir-generate-c-ffi;
 end library;
@@ -18,8 +19,10 @@ define module gir-generate-c-ffi
   use gobject-introspection;
   use command-line-parser;
   use streams;
+  use file-system;
   use format;
   use format-out;
+  use locators;
   use standard-io;
 
 end module;
