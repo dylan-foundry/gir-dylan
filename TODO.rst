@@ -35,7 +35,5 @@ gir-generate-c-ffi
 * Generate ``library.dylan``.
 * How to get the value for a constant? Do we need a bit of custom
   C?
-* Generate output into a directory of files for each namespace
-  being generated rather than stdout.
 * Fields might be arrays and need to be mapped to array slots.
 * Everything else.
