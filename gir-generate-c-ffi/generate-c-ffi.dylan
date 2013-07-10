@@ -80,7 +80,31 @@ define function generate-library-file
   let target-path = make-target-path(project-dir, "library.dylan");
   with-open-file (stream = target-path, direction: #"output",
                   if-does-not-exist: #"create")
-    // XXX: Real file contents.
+    format(stream, "module: dylan-user\n");
+    format(stream, "copyright: See LICENSE file in this distribution.\n");
+    format(stream, "\n");
+    format(stream, "define library %s\n", namespace);
+    format(stream, "  use dylan\n");
+    format(stream, "  use common-dylan\n");
+    format(stream, "  use c-ffi\n");
+    format(stream, "\n");
+    format(stream, "  export %s;\n", namespace);
+    format(stream, "end library;\n");
+    format(stream, "\n");
+    format(stream, "define module %s\n", namespace);
+    format(stream, "  use dylan\n");
+    format(stream, "  use common-dylan\n");
+    format(stream, "  use c-ffi\n");
+    format(stream, "\n");
+    format(stream, "  export");
+    for (binding in exported-bindings,
+         first? = #t then #f)
+      if (~first?) format(stream, ","); end if;
+      format(stream, "\n    %s", binding);
+    finally
+      format(stream, ";\n");
+    end for;
+    format(stream, "end module;\n");
   end with-open-file;
 end function;
 
