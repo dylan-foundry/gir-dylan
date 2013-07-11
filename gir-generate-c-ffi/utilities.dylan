@@ -55,7 +55,7 @@ define function map-interface-to-dylan-type (typeinfo) => (str :: <string>)
         type-tag = $GI-INFO-TYPE-OBJECT)
          => map-name(#"type", "", g-base-info-get-name(interface-info), #[]);
        otherwise
-         => "<C-XXX-interface>";
+         => "<object> /* <C-XXX-interface> */";
   end case
 end function map-interface-to-dylan-type;
 
@@ -73,16 +73,16 @@ define function map-to-dylan-type (typeinfo) => (str :: <string>)
     $GI-TYPE-TAG-UINT64 => "<C-unsigned-long>";
     $GI-TYPE-TAG-FLOAT => "<C-float>";
     $GI-TYPE-TAG-DOUBLE => "<C-double>";
-    $GI-TYPE-TAG-GTYPE => "<C-XXX-gtype>";
+    $GI-TYPE-TAG-GTYPE => "<object> /* <C-XXX-gtype> */";
     $GI-TYPE-TAG-UTF8 => "<C-string>";
     $GI-TYPE-TAG-FILENAME => "<C-string>";
-    $GI-TYPE-TAG-ARRAY => "<C-XXX-array>";
+    $GI-TYPE-TAG-ARRAY => "<object> /* <C-XXX-array> */";
     $GI-TYPE-TAG-INTERFACE => map-interface-to-dylan-type(typeinfo);
-    $GI-TYPE-TAG-GLIST => "<C-XXX-glist>";
-    $GI-TYPE-TAG-GSLIST => "<C-XXX-gslist>";
-    $GI-TYPE-TAG-GHASH => "<C-XXX-ghash>";
-    $GI-TYPE-TAG-ERROR => "<C-XXX-error>";
-    $GI-TYPE-TAG-UNICHAR => "<C-XXX-unichar>";
+    $GI-TYPE-TAG-GLIST => "<object> /* <C-XXX-glist> */";
+    $GI-TYPE-TAG-GSLIST => "<object> /* <C-XXX-gslist> */";
+    $GI-TYPE-TAG-GHASH => "<object> /* <C-XXX-ghash> */";
+    $GI-TYPE-TAG-ERROR => "<object> /* <C-XXX-error> */";
+    $GI-TYPE-TAG-UNICHAR => "<object> /* <C-XXX-unichar> */";
   end select
 end function;
 
