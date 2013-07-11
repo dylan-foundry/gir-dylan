@@ -359,7 +359,7 @@ define function write-c-ffi-function (context, function-info, container-name) =>
       // XXX: We don't handle this. When does this happen?
     else
       let direction = direction-to-string(g-arg-info-get-direction(arg));
-      format(context.output-stream, "  %s parameter %s :: %s;\n", direction, arg-name, arg-type);
+      format(context.output-stream, "  %s parameter %s_ :: %s;\n", direction, arg-name, arg-type);
     end if;
     g-base-info-unref(arg);
   end for;
