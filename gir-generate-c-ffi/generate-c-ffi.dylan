@@ -214,7 +214,34 @@ end method;
 
 define method write-c-ffi (context, interface-info, type == $GI-INFO-TYPE-INTERFACE)
  => ()
-  format(context.output-stream, "interface\n");
+  let name = g-base-info-get-name(interface-info);
+  let dylan-struct-name = map-name(#"type", "_", name, #[]);
+  let dylan-name = map-name(#"type", "", name, #[]);
+  let num-prerequisites = g-interface-info-get-n-prerequisites(interface-info);
+  format(context.output-stream, "// Interface\n");
+  if (num-prerequisites = 0)
+    format(context.output-stream, "define C-struct %s\n", dylan-struct-name);
+    format(context.output-stream, "  pointer-type-name: %s;\n", dylan-name);
+    format(context.output-stream, "end C-struct\n\n");
+  else
+    let prerequisites-name = #[];
+    for (i from 0 below num-prerequisites)
+      let prerequisite = g-interface-info-get-prerequisite(interface-info, i);
+      let prerequisite-name = g-base-info-get-name(prerequisite);
+      let prerequisite-dylan-name = map-name(#"type", "", prerequisite-name, #[]);
+      prerequisites-name := add!(prerequisites-name, prerequisite-dylan-name);
+    end for;
+    let joined-names = join(prerequisites-name, ", ");
+    format(context.output-stream, "define C-subtype %s (%s)\n", dylan-struct-name, joined-names);
+    format(context.output-stream, "  pointer-type-name: %s;\n", dylan-name);
+    format(context.output-stream, "end C-subtype\n\n");
+  end;
+
+  let num-methods = g-interface-info-get-n-methods(interface-info);
+  for (i from 0 below num-methods)
+    let function-info = g-interface-info-get-method(interface-info, i);
+    write-c-ffi-function(context, function-info, dylan-name);
+  end for;
 end method;
 
 define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
