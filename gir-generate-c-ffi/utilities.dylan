@@ -39,6 +39,26 @@ define function direction-to-string (direction) => (dir :: <string>)
   end select;
 end function;
 
+define function map-interface-to-dylan-type (typeinfo) => (str :: <string>)
+  let interface-info = g-type-info-get-interface(typeinfo);
+  let type-tag = g-base-info-get-type(interface-info);
+  case (type-tag = $GI-INFO-TYPE-CALLBACK)
+         => "<C-function-pointer>";
+       (type-tag = $GI-INFO-TYPE-BOXED |
+        type-tag = $GI-INFO-TYPE-STRUCT |
+        type-tag = $GI-INFO-TYPE-UNION)
+         => map-name(#"type", "", g-base-info-get-name(interface-info), #[]);
+       (type-tag = $GI-INFO-TYPE-ENUM |
+        type-tag = $GI-INFO-TYPE-FLAGS)
+         => map-name(#"type", "", g-base-info-get-name(interface-info), #[]);
+       (type-tag = $GI-INFO-TYPE-INTERFACE |
+        type-tag = $GI-INFO-TYPE-OBJECT)
+         => map-name(#"type", "", g-base-info-get-name(interface-info), #[]);
+       otherwise
+         => "<C-XXX-interface>";
+  end case
+end function map-interface-to-dylan-type;
+
 define function map-to-dylan-type (typeinfo) => (str :: <string>)
   select (g-type-info-get-tag(typeinfo))
     $GI-TYPE-TAG-VOID => "<C-void>";
@@ -57,7 +77,7 @@ define function map-to-dylan-type (typeinfo) => (str :: <string>)
     $GI-TYPE-TAG-UTF8 => "<C-string>";
     $GI-TYPE-TAG-FILENAME => "<C-string>";
     $GI-TYPE-TAG-ARRAY => "<C-XXX-array>";
-    $GI-TYPE-TAG-INTERFACE => "<C-XXX-interface>";
+    $GI-TYPE-TAG-INTERFACE => map-interface-to-dylan-type(typeinfo);
     $GI-TYPE-TAG-GLIST => "<C-XXX-glist>";
     $GI-TYPE-TAG-GSLIST => "<C-XXX-gslist>";
     $GI-TYPE-TAG-GHASH => "<C-XXX-ghash>";
