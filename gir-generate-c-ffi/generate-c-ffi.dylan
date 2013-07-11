@@ -58,6 +58,9 @@ define function generate-dylan-file
   let target-path = make-target-path(project-dir, project-name, ".dylan");
   with-open-file (stream = target-path, direction: #"output",
                   if-does-not-exist: #"create")
+    format(stream, "module: %s\n", lowercase(namespace));
+    format(stream, "synopsis: generated bindings for the %s library\n", namespace);
+    format(stream, "copyright: See LICENSE file in this distribution.\n\n");
     let repo = g-irepository-get-default();
     let context = make(<context>, stream: stream);
     let count = g-irepository-get-n-infos(repo, namespace);
