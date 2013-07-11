@@ -25,9 +25,9 @@ define function make-project-name
      #key include-dylan = #f)
  => (name :: <string>)
   if (include-dylan)
-    concatenate(workspace, "-dylan")
+    concatenate(lowercase(workspace), "-dylan")
   else
-    workspace
+    lowercase(workspace)
   end if
 end function;
 
@@ -80,18 +80,19 @@ define function generate-library-file
   let target-path = make-target-path(project-dir, "library.dylan");
   with-open-file (stream = target-path, direction: #"output",
                   if-does-not-exist: #"create")
+    let lower-namespace = lowercase(namespace);
     format(stream, "module: dylan-user\n");
     format(stream, "copyright: See LICENSE file in this distribution.\n");
     format(stream, "\n");
-    format(stream, "define library %s\n", namespace);
+    format(stream, "define library %s\n", lower-namespace);
     format(stream, "  use dylan\n");
     format(stream, "  use common-dylan\n");
     format(stream, "  use c-ffi\n");
     format(stream, "\n");
-    format(stream, "  export %s;\n", namespace);
+    format(stream, "  export %s;\n", lower-namespace);
     format(stream, "end library;\n");
     format(stream, "\n");
-    format(stream, "define module %s\n", namespace);
+    format(stream, "define module %s\n", lower-namespace);
     format(stream, "  use dylan\n");
     format(stream, "  use common-dylan\n");
     format(stream, "  use c-ffi\n");
@@ -117,11 +118,12 @@ define function generate-lid-file
   let target-path = make-target-path(project-dir, project-name, ".lid");
   with-open-file (stream = target-path, direction: #"output",
                   if-does-not-exist: #"create")
-    format(stream, "library: %s\n", namespace);
+    let lower-namespace = lowercase(namespace);
+    format(stream, "library: %s\n", lower-namespace);
     format(stream, "target-type: dll\n");
     format(stream, "executable: %s\n", project-name);
     format(stream, "files: library\n");
-    format(stream, "       %s\n", namespace);
+    format(stream, "       %s\n", lower-namespace);
     // XXX: Need to output C-libraries here.
   end with-open-file;
 end function;
