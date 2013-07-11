@@ -88,17 +88,17 @@ define function generate-library-file
     format(stream, "copyright: See LICENSE file in this distribution.\n");
     format(stream, "\n");
     format(stream, "define library %s\n", lower-namespace);
-    format(stream, "  use dylan\n");
-    format(stream, "  use common-dylan\n");
-    format(stream, "  use c-ffi\n");
+    format(stream, "  use dylan;\n");
+    format(stream, "  use common-dylan;\n");
+    format(stream, "  use c-ffi;\n");
     format(stream, "\n");
     format(stream, "  export %s;\n", lower-namespace);
     format(stream, "end library;\n");
     format(stream, "\n");
     format(stream, "define module %s\n", lower-namespace);
-    format(stream, "  use dylan\n");
-    format(stream, "  use common-dylan\n");
-    format(stream, "  use c-ffi\n");
+    format(stream, "  use dylan;\n");
+    format(stream, "  use common-dylan;\n");
+    format(stream, "  use c-ffi;\n");
     format(stream, "\n");
     format(stream, "  export");
     for (binding in exported-bindings,
@@ -201,7 +201,7 @@ define method write-c-ffi (context, enum-info, type == $GI-INFO-TYPE-ENUM)
     add-exported-binding(context, dylan-name);
     value-names := add!(value-names, dylan-name);
     let integer-value = g-value-info-get-value(value);
-    format(context.output-stream, "define constant %s :: <integer> = %d\n", dylan-name, integer-value);
+    format(context.output-stream, "define constant %s :: <integer> = %d;\n", dylan-name, integer-value);
     g-base-info-unref(value);
   end for;
   let enum-name  = g-base-info-get-name(enum-info);
@@ -232,7 +232,7 @@ define method write-c-ffi (context, interface-info, type == $GI-INFO-TYPE-INTERF
   if (num-prerequisites = 0)
     format(context.output-stream, "define C-struct %s\n", dylan-struct-name);
     format(context.output-stream, "  pointer-type-name: %s;\n", dylan-name);
-    format(context.output-stream, "end C-struct\n\n");
+    format(context.output-stream, "end C-struct;\n\n");
   else
     let prerequisites-name = #[];
     for (i from 0 below num-prerequisites)
@@ -244,7 +244,7 @@ define method write-c-ffi (context, interface-info, type == $GI-INFO-TYPE-INTERF
     let joined-names = join(prerequisites-name, ", ");
     format(context.output-stream, "define C-subtype %s (%s)\n", dylan-struct-name, joined-names);
     format(context.output-stream, "  pointer-type-name: %s;\n", dylan-name);
-    format(context.output-stream, "end C-subtype\n\n");
+    format(context.output-stream, "end C-subtype;\n\n");
   end;
 
   let num-methods = g-interface-info-get-n-methods(interface-info);
@@ -265,7 +265,7 @@ define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
     let field = g-object-info-get-field(object-info, i);
     write-c-ffi-field(context, field, name);
   end for;
-  format(context.output-stream, "end C-struct\n\n");
+  format(context.output-stream, "end C-struct;\n\n");
   let num-methods = g-object-info-get-n-methods(object-info);
   for (i from 0 below num-methods)
     let function-info = g-object-info-get-method(object-info, i);
@@ -284,7 +284,7 @@ define method write-c-ffi (context, struct-info, type == $GI-INFO-TYPE-STRUCT)
     let field = g-struct-info-get-field(struct-info, i);
     write-c-ffi-field(context, field, name);
   end for;
-  format(context.output-stream, "end C-struct\n\n");
+  format(context.output-stream, "end C-struct;\n\n");
   let num-methods = g-struct-info-get-n-methods(struct-info);
   for (i from 0 below num-methods)
     let function-info = g-struct-info-get-method(struct-info, i);
@@ -303,7 +303,7 @@ define method write-c-ffi (context, union-info, type == $GI-INFO-TYPE-UNION)
     let field = g-union-info-get-field(union-info, i);
     write-c-ffi-field(context, field, name);
   end for;
-  format(context.output-stream, "end C-union\n\n");
+  format(context.output-stream, "end C-union;\n\n");
   let num-methods = g-union-info-get-n-methods(union-info);
   for (i from 0 below num-methods)
     let function-info = g-union-info-get-method(union-info, i);
