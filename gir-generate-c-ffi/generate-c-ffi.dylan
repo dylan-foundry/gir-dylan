@@ -117,7 +117,12 @@ define function generate-lid-file
   let target-path = make-target-path(project-dir, project-name, ".lid");
   with-open-file (stream = target-path, direction: #"output",
                   if-does-not-exist: #"create")
-    // XXX: Real file contents.
+    format(stream, "library: %s\n", namespace);
+    format(stream, "target-type: dll\n");
+    format(stream, "executable: %s\n", project-name);
+    format(stream, "files: library\n");
+    format(stream, "       %s\n", namespace);
+    // XXX: Need to output C-libraries here.
   end with-open-file;
 end function;
 
