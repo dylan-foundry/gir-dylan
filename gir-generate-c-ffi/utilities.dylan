@@ -16,6 +16,8 @@ define method map-name
     add!(buffer, '<');
   elseif (category == #"union")
     add!(buffer, '<');
+  elseif (category == #"enum")
+    add!(buffer, '<');
   elseif (category == #"constant")
     add!(buffer, '$');
   end if;
@@ -27,7 +29,8 @@ define method map-name
     add!(buffer, if (non-underline & char == '_') '-' else char end if);
   end for;
 
-  if (category == #"type" | category == #"type-pointer" | category == #"union")
+  if (category == #"type" | category == #"type-pointer" | category == #"union" |
+      category == #"enum")
     add!(buffer, '>');
   end if;
   as(<byte-string>, buffer);
@@ -53,7 +56,7 @@ define function map-interface-to-dylan-type (context, typeinfo) => (str :: <stri
          => map-name(#"union", context.prefix, g-base-info-get-name(interface-info));
        (type-tag = $GI-INFO-TYPE-ENUM |
         type-tag = $GI-INFO-TYPE-FLAGS)
-         => map-name(#"type", context.prefix, g-base-info-get-name(interface-info));
+         => map-name(#"enum", context.prefix, g-base-info-get-name(interface-info));
        (type-tag = $GI-INFO-TYPE-INTERFACE |
         type-tag = $GI-INFO-TYPE-OBJECT)
          => map-name(#"type-pointer", context.prefix, g-base-info-get-name(interface-info));
