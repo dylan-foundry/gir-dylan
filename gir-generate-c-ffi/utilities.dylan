@@ -59,7 +59,7 @@ end function map-interface-to-dylan-type;
 
 define function map-to-dylan-type (context, typeinfo) => (str :: <string>)
   select (g-type-info-get-tag(typeinfo))
-    $GI-TYPE-TAG-VOID => "<C-void>";
+    $GI-TYPE-TAG-VOID => if (g-type-info-is-pointer(typeinfo)) "<C-void*>" else "XXX" end if;
     $GI-TYPE-TAG-BOOLEAN => "<C-boolean>";
     $GI-TYPE-TAG-INT8 => "<C-signed-char>";
     $GI-TYPE-TAG-UINT8 => "<C-unsigned-char>";

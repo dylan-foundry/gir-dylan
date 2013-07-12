@@ -370,8 +370,10 @@ define function write-c-ffi-function (context, function-info, container-name) =>
     g-base-info-unref(arg);
   end for;
   let result-type = g-callable-info-get-return-type(function-info);
-  let dylan-result-type = map-to-dylan-type(context, result-type);
-  format(context.output-stream, "  result res :: %s;\n", dylan-result-type);
+  if ((g-type-info-get-tag(result-type) ~= $GI-TYPE-TAG-VOID) & ~g-type-info-is-pointer(result-type))
+    let dylan-result-type = map-to-dylan-type(context, result-type);
+    format(context.output-stream, "  result res :: %s;\n", dylan-result-type);
+  end if;
   let symbol = g-function-info-get-symbol(function-info);
   format(context.output-stream, "  c-name: \"%s\";\n", symbol);
   format(context.output-stream, "end;\n\n");
