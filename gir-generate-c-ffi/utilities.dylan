@@ -84,6 +84,21 @@ define function map-to-dylan-type (context, typeinfo) => (str :: <string>)
   end select
 end function;
 
+define function escape-string (input-str :: <string>) => (result :: <string>)
+  let buffer = make(<stretchy-vector>);
+  add!(buffer, '"');
+  for (ch in input-str)
+    if (ch = '\\')
+      add!(buffer, '\\');
+      add!(buffer, '\\');
+    else
+      add!(buffer, ch);
+    end;
+  end for;
+  add!(buffer, '"');
+  as(<byte-string>, buffer)
+end function escape-string;
+
 define function convert-gi-argument (argument, type) => (value)
   select (type)
     $GI-TYPE-TAG-VOID => "XXX";
@@ -99,8 +114,8 @@ define function convert-gi-argument (argument, type) => (value)
     $GI-TYPE-TAG-FLOAT => argument._GIArgument$v-float;
     $GI-TYPE-TAG-DOUBLE => argument._GIArgument$v-double;
     $GI-TYPE-TAG-GTYPE => "XXX";
-    $GI-TYPE-TAG-UTF8 => concatenate("\"", argument._GIArgument$v-string, "\"");
-    $GI-TYPE-TAG-FILENAME => concatenate("\"", argument._GIArgument$v-string, "\"");
+    $GI-TYPE-TAG-UTF8 => escape-string(argument._GIArgument$v-string);
+    $GI-TYPE-TAG-FILENAME => escape-string(argument._GIArgument$v-string);
     $GI-TYPE-TAG-ARRAY => "XXX";
     $GI-TYPE-TAG-INTERFACE => "XXX";
     $GI-TYPE-TAG-GLIST => "XXX";
