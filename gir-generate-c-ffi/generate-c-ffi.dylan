@@ -68,9 +68,11 @@ define function generate-dylan-file
     let count = g-irepository-get-n-infos(repo, namespace);
     for (i from 0 below count)
       let info = g-irepository-get-info(repo, namespace, i);
-      let type = g-base-info-get-type(info);
-      write-c-ffi(context, info, type);
-      force-output(context.output-stream);
+      if (~g-base-info-is-deprecated(info))
+        let type = g-base-info-get-type(info);
+        write-c-ffi(context, info, type);
+        force-output(context.output-stream);
+      end if;
     end for;
     context.exported-bindings
   end with-open-file
