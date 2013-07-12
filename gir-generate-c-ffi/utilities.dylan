@@ -14,6 +14,10 @@ define method map-name
     add!(buffer, '_');
   elseif (category == #"type-pointer")
     add!(buffer, '<');
+  elseif (category == #"union")
+    add!(buffer, '<');
+  elseif (category == #"enum")
+    add!(buffer, '<');
   elseif (category == #"constant")
     add!(buffer, '$');
   end if;
@@ -25,7 +29,10 @@ define method map-name
     add!(buffer, if (non-underline & char == '_') '-' else char end if);
   end for;
 
-  if (category == #"type" | category == #"type-pointer") add!(buffer, '>') end if;
+  if (category == #"type" | category == #"type-pointer" | category == #"union" |
+      category == #"enum")
+    add!(buffer, '>');
+  end if;
   as(<byte-string>, buffer);
 end method map-name;
 
@@ -43,12 +50,13 @@ define function map-interface-to-dylan-type (context, typeinfo) => (str :: <stri
   case (type-tag = $GI-INFO-TYPE-CALLBACK)
          => "<C-function-pointer>";
        (type-tag = $GI-INFO-TYPE-BOXED |
-        type-tag = $GI-INFO-TYPE-STRUCT |
-        type-tag = $GI-INFO-TYPE-UNION)
+        type-tag = $GI-INFO-TYPE-STRUCT)
          => map-name(#"type-pointer", context.prefix, g-base-info-get-name(interface-info));
+       (type-tag = $GI-INFO-TYPE-UNION)
+         => map-name(#"union", context.prefix, g-base-info-get-name(interface-info));
        (type-tag = $GI-INFO-TYPE-ENUM |
         type-tag = $GI-INFO-TYPE-FLAGS)
-         => map-name(#"type", context.prefix, g-base-info-get-name(interface-info));
+         => map-name(#"enum", context.prefix, g-base-info-get-name(interface-info));
        (type-tag = $GI-INFO-TYPE-INTERFACE |
         type-tag = $GI-INFO-TYPE-OBJECT)
          => map-name(#"type-pointer", context.prefix, g-base-info-get-name(interface-info));
