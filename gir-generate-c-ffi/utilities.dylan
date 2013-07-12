@@ -5,8 +5,7 @@ copyright: See LICENSE file in this distribution.
 
 /* This is borrowed from code in melange */
 define method map-name
-    (category :: <symbol>, prefix :: <string>, name :: <string>,
-     sequence-of-classes :: <sequence>)
+    (category :: <symbol>, prefix :: <string>, name :: <string>)
  => (result :: <string>);
   let buffer = make(<stretchy-vector>);
 
@@ -20,10 +19,6 @@ define method map-name
   end if;
 
   buffer := concatenate(buffer, prefix);
-  for (cls in sequence-of-classes)
-    buffer := concatenate(buffer, copy-sequence(cls, start: 1));
-    add!(buffer, '-');
-  end for;
 
   for (non-underline = #f then non-underline | char ~= '_',
        char in name)
@@ -50,13 +45,13 @@ define function map-interface-to-dylan-type (context, typeinfo) => (str :: <stri
        (type-tag = $GI-INFO-TYPE-BOXED |
         type-tag = $GI-INFO-TYPE-STRUCT |
         type-tag = $GI-INFO-TYPE-UNION)
-         => map-name(#"type-pointer", context.prefix, g-base-info-get-name(interface-info), #[]);
+         => map-name(#"type-pointer", context.prefix, g-base-info-get-name(interface-info));
        (type-tag = $GI-INFO-TYPE-ENUM |
         type-tag = $GI-INFO-TYPE-FLAGS)
-         => map-name(#"type", context.prefix, g-base-info-get-name(interface-info), #[]);
+         => map-name(#"type", context.prefix, g-base-info-get-name(interface-info));
        (type-tag = $GI-INFO-TYPE-INTERFACE |
         type-tag = $GI-INFO-TYPE-OBJECT)
-         => map-name(#"type-pointer", context.prefix, g-base-info-get-name(interface-info), #[]);
+         => map-name(#"type-pointer", context.prefix, g-base-info-get-name(interface-info));
        otherwise
          => "<object> /* <C-XXX-interface> */";
   end case

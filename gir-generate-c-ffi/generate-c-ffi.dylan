@@ -180,7 +180,7 @@ end method;
 define method write-c-ffi (context, constant-info, type == $GI-INFO-TYPE-CONSTANT)
  => ()
   let name = g-base-info-get-name(constant-info);
-  let dylan-name = map-name(#"constant", "", name, #[]);
+  let dylan-name = map-name(#"constant", "", name);
   add-exported-binding(context, dylan-name);
   let type = g-constant-info-get-type(constant-info);
   let dylan-type = map-to-dylan-type(context, type);
@@ -199,7 +199,7 @@ define method write-c-ffi (context, enum-info, type == $GI-INFO-TYPE-ENUM)
   for (i from 0 below num-values)
     let value = g-enum-info-get-value(enum-info, i);
     let name = g-base-info-get-attribute(value, "c:identifier");
-    let dylan-name = map-name(#"constant", "", name, #[]);
+    let dylan-name = map-name(#"constant", "", name);
     add-exported-binding(context, dylan-name);
     value-names := add!(value-names, dylan-name);
     let integer-value = g-value-info-get-value(value);
@@ -207,7 +207,7 @@ define method write-c-ffi (context, enum-info, type == $GI-INFO-TYPE-ENUM)
     g-base-info-unref(value);
   end for;
   let enum-name  = g-base-info-get-name(enum-info);
-  let dylan-enum-name = map-name(#"type", "", enum-name, #[]);
+  let dylan-enum-name = map-name(#"type", "", enum-name);
   add-exported-binding(context, dylan-enum-name);
   let joined-value-names = join(value-names, ", ");
   format(context.output-stream, "define constant %s = one-of(%s);\n\n", dylan-enum-name, joined-value-names);
@@ -227,8 +227,8 @@ end method;
 define method write-c-ffi (context, interface-info, type == $GI-INFO-TYPE-INTERFACE)
  => ()
   let name = g-base-info-get-name(interface-info);
-  let dylan-name = map-name(#"type", context.prefix, name, #[]);
-  let dylan-pointer-name = map-name(#"type-pointer", context.prefix, name, #[]);
+  let dylan-name = map-name(#"type", context.prefix, name);
+  let dylan-pointer-name = map-name(#"type-pointer", context.prefix, name);
   let num-prerequisites = g-interface-info-get-n-prerequisites(interface-info);
   format(context.output-stream, "// Interface\n");
   if (num-prerequisites = 0)
@@ -240,7 +240,7 @@ define method write-c-ffi (context, interface-info, type == $GI-INFO-TYPE-INTERF
     for (i from 0 below num-prerequisites)
       let prerequisite = g-interface-info-get-prerequisite(interface-info, i);
       let prerequisite-name = g-base-info-get-name(prerequisite);
-      let prerequisite-dylan-name = map-name(#"type", context.prefix, prerequisite-name, #[]);
+      let prerequisite-dylan-name = map-name(#"type", context.prefix, prerequisite-name);
       prerequisites-name := add!(prerequisites-name, prerequisite-dylan-name);
     end for;
     let joined-names = join(prerequisites-name, ", ");
@@ -259,8 +259,8 @@ end method;
 define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
  => ()
   let name = g-base-info-get-name(object-info);
-  let dylan-name = map-name(#"type", context.prefix, name, #[]);
-  let dylan-pointer-name = map-name(#"type-pointer", context.prefix, name, #[]);
+  let dylan-name = map-name(#"type", context.prefix, name);
+  let dylan-pointer-name = map-name(#"type-pointer", context.prefix, name);
   add-exported-binding(context, dylan-pointer-name);
   format(context.output-stream, "define C-struct %s\n", dylan-name);
   let num-fields = g-object-info-get-n-fields(object-info);
@@ -280,8 +280,8 @@ end method;
 define method write-c-ffi (context, struct-info, type == $GI-INFO-TYPE-STRUCT)
  => ()
   let name = g-base-info-get-name(struct-info);
-  let dylan-name = map-name(#"type", context.prefix, name, #[]);
-  let dylan-pointer-name = map-name(#"type-pointer", context.prefix, name, #[]);
+  let dylan-name = map-name(#"type", context.prefix, name);
+  let dylan-pointer-name = map-name(#"type-pointer", context.prefix, name);
   add-exported-binding(context, dylan-pointer-name);
   format(context.output-stream, "define C-struct %s\n", dylan-name);
   let num-fields = g-struct-info-get-n-fields(struct-info);
@@ -301,7 +301,7 @@ end method;
 define method write-c-ffi (context, union-info, type == $GI-INFO-TYPE-UNION)
  => ()
   let name = g-base-info-get-name(union-info);
-  let dylan-name = map-name(#"type", context.prefix, name, #[]);
+  let dylan-name = map-name(#"type", context.prefix, name);
   add-exported-binding(context, dylan-name);
   format(context.output-stream, "define C-union %s\n", dylan-name);
   let num-fields = g-union-info-get-n-fields(union-info);
@@ -328,7 +328,7 @@ define function field-is-readable? (field) => (readable? :: <boolean>)
 end function field-is-readable?;
 
 define function write-c-ffi-field (context, field, container-name) => ()
-  let field-name = map-name(#"field", "", g-base-info-get-name(field), #[]);
+  let field-name = map-name(#"field", "", g-base-info-get-name(field));
   let slot-name = concatenate(container-name, "-", field-name);
   let field-type = map-to-dylan-type(context, g-field-info-get-type(field));
   let writable? = field-is-writable?(field);
@@ -350,7 +350,7 @@ end function;
 
 define function write-c-ffi-function (context, function-info, container-name) => ()
   let symbol = g-function-info-get-symbol(function-info);
-  let dylan-name = map-name(#"function", "", symbol, #[]);
+  let dylan-name = map-name(#"function", "", symbol);
   add-exported-binding(context, dylan-name);
   format(context.output-stream, "define C-function %s\n", dylan-name);
   if (logand(g-function-info-get-flags(function-info), $GI-FUNCTION-IS-METHOD) ~= 0)
