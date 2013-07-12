@@ -301,7 +301,7 @@ end method;
 define method write-c-ffi (context, union-info, type == $GI-INFO-TYPE-UNION)
  => ()
   let name = g-base-info-get-name(union-info);
-  let dylan-name = map-name(#"type", context.prefix, name);
+  let dylan-name = map-name(#"union", context.prefix, name);
   add-exported-binding(context, dylan-name);
   format(context.output-stream, "define C-union %s\n", dylan-name);
   let num-fields = g-union-info-get-n-fields(union-info);
