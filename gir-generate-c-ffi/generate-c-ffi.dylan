@@ -207,7 +207,7 @@ define method write-c-ffi (context, enum-info, type == $GI-INFO-TYPE-ENUM)
     g-base-info-unref(value);
   end for;
   let enum-name  = g-base-info-get-name(enum-info);
-  let dylan-enum-name = map-name(#"type", "", enum-name);
+  let dylan-enum-name = map-name(#"type", context.prefix, enum-name);
   add-exported-binding(context, dylan-enum-name);
   let joined-value-names = join(value-names, ", ");
   format(context.output-stream, "define constant %s = one-of(%s);\n\n", dylan-enum-name, joined-value-names);
