@@ -328,23 +328,23 @@ define function field-is-readable? (field) => (readable? :: <boolean>)
 end function field-is-readable?;
 
 define function write-c-ffi-field (context, field, container-name) => ()
-  let field-name = map-name(#"field", "", g-base-info-get-name(field));
-  let slot-name = concatenate(container-name, "-", field-name);
+  let prefix = lowercase(concatenate(context.prefix, container-name, "-"));
+  let field-name = map-name(#"field", prefix, g-base-info-get-name(field));
   let field-type = map-to-dylan-type(context, g-field-info-get-type(field));
   let writable? = field-is-writable?(field);
   let readable? = field-is-readable?(field);
   // XXX: Consider prefixing the name with the struct name.
   if (readable?)
-    add-exported-binding(context, slot-name);
+    add-exported-binding(context, field-name);
   end;
   if (writable?)
-    let setter-name = concatenate(slot-name, "-setter");
+    let setter-name = concatenate(field-name, "-setter");
     add-exported-binding(context, setter-name);
   end;
 
   format(context.output-stream, "  %sslot %s :: %s;\n",
          if (writable?) "" else "constant " end if,
-         slot-name,
+         field-name,
          field-type);
 end function;
 
