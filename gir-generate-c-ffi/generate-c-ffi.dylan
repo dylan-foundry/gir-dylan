@@ -278,14 +278,17 @@ define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
   let dylan-pointer-name = map-name(#"type-pointer", context.prefix, name);
   if (~binding-already-exported?(context, dylan-pointer-name))
     add-exported-binding(context, dylan-pointer-name);
-    format(context.output-stream, "define C-struct %s\n", dylan-name);
+    let parent-info = g-object-info-get-parent(object-info);
+    let parent-name = g-base-info-get-name(object-info);
+    let parent-dylan-name = map-name(#"type-pointer", context.prefix, name);
+    format(context.output-stream, "define C-subtype %s (%s)\n", dylan-name, parent-dylan-name);
     let num-fields = g-object-info-get-n-fields(object-info);
     for (i from 0 below num-fields)
       let field = g-object-info-get-field(object-info, i);
       write-c-ffi-field(context, field, name);
     end for;
     format(context.output-stream, "  pointer-type-name: %s;\n", dylan-pointer-name);
-    format(context.output-stream, "end C-struct;\n\n");
+    format(context.output-stream, "end C-subtype;\n\n");
     let num-methods = g-object-info-get-n-methods(object-info);
     for (i from 0 below num-methods)
       let function-info = g-object-info-get-method(object-info, i);
