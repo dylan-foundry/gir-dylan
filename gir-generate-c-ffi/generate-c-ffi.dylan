@@ -196,18 +196,7 @@ end method;
 
 define method write-c-ffi (context, enum-info, type == $GI-INFO-TYPE-ENUM)
  => ()
-  let value-names = #[];
-  let num-values = g-enum-info-get-n-values(enum-info);
-  for (i from 0 below num-values)
-    let value = g-enum-info-get-value(enum-info, i);
-    let name = g-base-info-get-attribute(value, "c:identifier");
-    let dylan-name = map-name(#"constant", "", name);
-    add-exported-binding(context, dylan-name);
-    value-names := add!(value-names, dylan-name);
-    let integer-value = g-value-info-get-value(value);
-    format(context.output-stream, "define constant %s :: <integer> = %d;\n", dylan-name, integer-value);
-    g-base-info-unref(value);
-  end for;
+  let value-names = write-c-ffi-values(context, enum-info);
   let enum-name  = g-base-info-get-name(enum-info);
   let dylan-enum-name = map-name(#"enum", context.prefix, enum-name);
   add-exported-binding(context, dylan-enum-name);
@@ -217,8 +206,11 @@ end method;
 
 define method write-c-ffi (context, flags-info, type == $GI-INFO-TYPE-FLAGS)
  => ()
-  // This is the same as an enum
-  write-c-ffi(context, flags-info, $GI-INFO-TYPE-ENUM)
+  write-c-ffi-values(context, flags-info);
+  let flags-name  = g-base-info-get-name(flags-info);
+  let dylan-flags-name = map-name(#"enum", context.prefix, flags-name);
+  add-exported-binding(context, dylan-flags-name);
+  format(context.output-stream, "define constant %s = <C-int>;\n\n", dylan-flags-name);
 end method;
 
 define method write-c-ffi (context, function-info, type == $GI-INFO-TYPE-FUNCTION)
@@ -380,3 +372,19 @@ define function write-c-ffi-function (context, function-info, container-name) =>
   format(context.output-stream, "  c-name: \"%s\";\n", symbol);
   format(context.output-stream, "end;\n\n");
 end function;
+
+define function write-c-ffi-values (context, info) => (value-names :: <sequence>)
+  let value-names = #[];
+  let num-values = g-enum-info-get-n-values(info);
+  for (i from 0 below num-values)
+    let value = g-enum-info-get-value(info, i);
+    let name = g-base-info-get-attribute(value, "c:identifier");
+    let dylan-name = map-name(#"constant", "", name);
+    add-exported-binding(context, dylan-name);
+    value-names := add!(value-names, dylan-name);
+    let integer-value = g-value-info-get-value(value);
+    format(context.output-stream, "define constant %s :: <integer> = %d;\n", dylan-name, integer-value);
+    g-base-info-unref(value);
+  end for;
+  value-names
+end function write-c-ffi-values;
