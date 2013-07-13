@@ -72,6 +72,17 @@ define function generate-dylan-file
     format(stream, "synopsis: generated bindings for the %s library\n", namespace);
     format(stream, "copyright: See LICENSE file in this distribution.\n\n");
     let repo = g-irepository-get-default();
+
+    let dependencies-c-array = g-irepository-get-dependencies(repo, namespace);
+    block (exit)
+      for (i from 0)
+        let dependency = element(dependencies-c-array, i);
+        if (null-pointer?(dependency)) exit() end if;
+        format(*standard-error*, "Detected dependency: %s\n", dependency);
+        force-output(*standard-error*);
+      end for;
+    end block;
+
     let prefix = g-irepository-get-c-prefix(repo, namespace);
     let context = make(<context>, stream: stream, prefix: prefix);
     let count = g-irepository-get-n-infos(repo, namespace);
@@ -278,14 +289,27 @@ define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
   let dylan-pointer-name = map-name(#"type-pointer", context.prefix, name);
   if (~binding-already-exported?(context, dylan-pointer-name))
     add-exported-binding(context, dylan-pointer-name);
-    format(context.output-stream, "define C-struct %s\n", dylan-name);
+
+    let parent-info = g-object-info-get-parent(object-info);
+    let c-definer = "subtype";
+    if (null-pointer?(parent-info))
+      // This is the root object
+      format(context.output-stream, "define C-struct %s\n", dylan-name);
+      c-definer := "struct";
+    else
+      let parent-name = g-base-info-get-name(parent-info);
+      let parent-dylan-name = map-name(#"type", context.prefix, parent-name);
+      format(context.output-stream, "define C-subtype %s (%s)\n", dylan-name, parent-dylan-name);
+      g-base-info-unref(parent-info);
+    end if;
+
     let num-fields = g-object-info-get-n-fields(object-info);
     for (i from 0 below num-fields)
       let field = g-object-info-get-field(object-info, i);
       write-c-ffi-field(context, field, name);
     end for;
     format(context.output-stream, "  pointer-type-name: %s;\n", dylan-pointer-name);
-    format(context.output-stream, "end C-struct;\n\n");
+    format(context.output-stream, "end C-%s;\n\n", c-definer);
     let num-methods = g-object-info-get-n-methods(object-info);
     for (i from 0 below num-methods)
       let function-info = g-object-info-get-method(object-info, i);
