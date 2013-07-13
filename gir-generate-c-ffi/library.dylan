@@ -4,6 +4,7 @@ copyright: See LICENSE file in this distribution.
 
 define library gir-generate-c-ffi
   use common-dylan;
+  use collections;
   use c-ffi;
   use gobject-introspection;
   use command-line-parser;
@@ -16,6 +17,7 @@ end library;
 
 define module gir-generate-c-ffi
   use common-dylan, exclude: { format-to-string };
+  use collections;
   use c-ffi;
   use gobject-introspection;
   use command-line-parser;

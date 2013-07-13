@@ -5,6 +5,7 @@ copyright: See LICENSE file in this distribution.
 
 define class <context> (<object>)
   slot exported-bindings = #();
+  slot exported-bindings-index = make(<set>);
   constant slot output-stream :: <stream>,
     required-init-keyword: stream:;
   constant slot prefix, required-init-keyword: prefix:;
@@ -14,7 +15,15 @@ define function add-exported-binding
     (context :: <context>, binding-name :: <string>)
  => ()
   context.exported-bindings := add(context.exported-bindings, binding-name);
+  add!(context.exported-bindings-index, as(<symbol>, lowercase(binding-name)));
 end function;
+
+define function binding-already-exported?
+    (context :: <context>, binding-name :: <string>)
+ => (exported? :: <boolean>)
+  member?(as(<symbol>, lowercase(binding-name)),
+          context.exported-bindings-index)
+end function binding-already-exported?;
 
 define function make-target-path (project-dir, #rest args) => (target)
   merge-locators(as(<file-locator>, apply(concatenate, args)),
@@ -183,15 +192,17 @@ define method write-c-ffi (context, constant-info, type == $GI-INFO-TYPE-CONSTAN
  => ()
   let name = g-base-info-get-name(constant-info);
   let dylan-name = map-name(#"constant", "", name);
-  add-exported-binding(context, dylan-name);
-  let type = g-constant-info-get-type(constant-info);
-  let dylan-type = map-to-dylan-type(context, type);
-  let arg = make(<GIArgument>);
-  let type-tag = g-type-info-get-tag(type);
-  g-constant-info-get-value(constant-info, arg);
-  let value = convert-gi-argument(arg, type-tag);
-  format(context.output-stream, "define constant %s :: %s = %s;\n\n", dylan-name,
-             dylan-type, value);
+  if (~binding-already-exported?(context, dylan-name))
+    add-exported-binding(context, dylan-name);
+    let type = g-constant-info-get-type(constant-info);
+    let dylan-type = map-to-dylan-type(context, type);
+    let arg = make(<GIArgument>);
+    let type-tag = g-type-info-get-tag(type);
+    g-constant-info-get-value(constant-info, arg);
+    let value = convert-gi-argument(arg, type-tag);
+    format(context.output-stream, "define constant %s :: %s = %s;\n\n", dylan-name,
+               dylan-type, value);
+  end if;
 end method;
 
 define method write-c-ffi (context, enum-info, type == $GI-INFO-TYPE-ENUM)
@@ -199,9 +210,11 @@ define method write-c-ffi (context, enum-info, type == $GI-INFO-TYPE-ENUM)
   let value-names = write-c-ffi-values(context, enum-info);
   let enum-name  = g-base-info-get-name(enum-info);
   let dylan-enum-name = map-name(#"enum", context.prefix, enum-name);
-  add-exported-binding(context, dylan-enum-name);
-  let joined-value-names = join(value-names, ", ");
-  format(context.output-stream, "define constant %s = one-of(%s);\n\n", dylan-enum-name, joined-value-names);
+  if (~binding-already-exported?(context, dylan-enum-name))
+    add-exported-binding(context, dylan-enum-name);
+    let joined-value-names = join(value-names, ", ");
+    format(context.output-stream, "define constant %s = one-of(%s);\n\n", dylan-enum-name, joined-value-names);
+  end if;
 end method;
 
 define method write-c-ffi (context, flags-info, type == $GI-INFO-TYPE-FLAGS)
@@ -223,31 +236,33 @@ define method write-c-ffi (context, interface-info, type == $GI-INFO-TYPE-INTERF
   let name = g-base-info-get-name(interface-info);
   let dylan-name = map-name(#"type", context.prefix, name);
   let dylan-pointer-name = map-name(#"type-pointer", context.prefix, name);
-  let num-prerequisites = g-interface-info-get-n-prerequisites(interface-info);
-  format(context.output-stream, "// Interface\n");
-  if (num-prerequisites = 0)
-    format(context.output-stream, "define C-struct %s\n", dylan-name);
-    format(context.output-stream, "  pointer-type-name: %s;\n", dylan-pointer-name);
-    format(context.output-stream, "end C-struct;\n\n");
-  else
-    let prerequisites-name = #[];
-    for (i from 0 below num-prerequisites)
-      let prerequisite = g-interface-info-get-prerequisite(interface-info, i);
-      let prerequisite-name = g-base-info-get-name(prerequisite);
-      let prerequisite-dylan-name = map-name(#"type", context.prefix, prerequisite-name);
-      prerequisites-name := add!(prerequisites-name, prerequisite-dylan-name);
-    end for;
-    let joined-names = join(prerequisites-name, ", ");
-    format(context.output-stream, "define C-subtype %s (%s)\n", dylan-name, joined-names);
-    format(context.output-stream, "  pointer-type-name: %s;\n", dylan-pointer-name);
-    format(context.output-stream, "end C-subtype;\n\n");
-  end;
+  if (~binding-already-exported?(context, dylan-pointer-name))
+    let num-prerequisites = g-interface-info-get-n-prerequisites(interface-info);
+    format(context.output-stream, "// Interface\n");
+    if (num-prerequisites = 0)
+      format(context.output-stream, "define C-struct %s\n", dylan-name);
+      format(context.output-stream, "  pointer-type-name: %s;\n", dylan-pointer-name);
+      format(context.output-stream, "end C-struct;\n\n");
+    else
+      let prerequisites-name = #[];
+      for (i from 0 below num-prerequisites)
+        let prerequisite = g-interface-info-get-prerequisite(interface-info, i);
+        let prerequisite-name = g-base-info-get-name(prerequisite);
+        let prerequisite-dylan-name = map-name(#"type", context.prefix, prerequisite-name);
+        prerequisites-name := add!(prerequisites-name, prerequisite-dylan-name);
+      end for;
+      let joined-names = join(prerequisites-name, ", ");
+      format(context.output-stream, "define C-subtype %s (%s)\n", dylan-name, joined-names);
+      format(context.output-stream, "  pointer-type-name: %s;\n", dylan-pointer-name);
+      format(context.output-stream, "end C-subtype;\n\n");
+    end;
 
-  let num-methods = g-interface-info-get-n-methods(interface-info);
-  for (i from 0 below num-methods)
-    let function-info = g-interface-info-get-method(interface-info, i);
-    write-c-ffi-function(context, function-info, dylan-pointer-name);
-  end for;
+    let num-methods = g-interface-info-get-n-methods(interface-info);
+    for (i from 0 below num-methods)
+      let function-info = g-interface-info-get-method(interface-info, i);
+      write-c-ffi-function(context, function-info, dylan-pointer-name);
+    end for;
+  end if;
 end method;
 
 define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
@@ -255,20 +270,22 @@ define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
   let name = g-base-info-get-name(object-info);
   let dylan-name = map-name(#"type", context.prefix, name);
   let dylan-pointer-name = map-name(#"type-pointer", context.prefix, name);
-  add-exported-binding(context, dylan-pointer-name);
-  format(context.output-stream, "define C-struct %s\n", dylan-name);
-  let num-fields = g-object-info-get-n-fields(object-info);
-  for (i from 0 below num-fields)
-    let field = g-object-info-get-field(object-info, i);
-    write-c-ffi-field(context, field, name);
-  end for;
-  format(context.output-stream, "  pointer-type-name: %s;\n", dylan-pointer-name);
-  format(context.output-stream, "end C-struct;\n\n");
-  let num-methods = g-object-info-get-n-methods(object-info);
-  for (i from 0 below num-methods)
-    let function-info = g-object-info-get-method(object-info, i);
-    write-c-ffi-function(context, function-info, dylan-pointer-name);
-  end for;
+  if (~binding-already-exported?(context, dylan-pointer-name))
+    add-exported-binding(context, dylan-pointer-name);
+    format(context.output-stream, "define C-struct %s\n", dylan-name);
+    let num-fields = g-object-info-get-n-fields(object-info);
+    for (i from 0 below num-fields)
+      let field = g-object-info-get-field(object-info, i);
+      write-c-ffi-field(context, field, name);
+    end for;
+    format(context.output-stream, "  pointer-type-name: %s;\n", dylan-pointer-name);
+    format(context.output-stream, "end C-struct;\n\n");
+    let num-methods = g-object-info-get-n-methods(object-info);
+    for (i from 0 below num-methods)
+      let function-info = g-object-info-get-method(object-info, i);
+      write-c-ffi-function(context, function-info, dylan-pointer-name);
+    end for;
+  end if;
 end method;
 
 define method write-c-ffi (context, struct-info, type == $GI-INFO-TYPE-STRUCT)
@@ -276,39 +293,43 @@ define method write-c-ffi (context, struct-info, type == $GI-INFO-TYPE-STRUCT)
   let name = g-base-info-get-name(struct-info);
   let dylan-name = map-name(#"type", context.prefix, name);
   let dylan-pointer-name = map-name(#"type-pointer", context.prefix, name);
-  add-exported-binding(context, dylan-pointer-name);
-  format(context.output-stream, "define C-struct %s\n", dylan-name);
-  let num-fields = g-struct-info-get-n-fields(struct-info);
-  for (i from 0 below num-fields)
-    let field = g-struct-info-get-field(struct-info, i);
-    write-c-ffi-field(context, field, name);
-  end for;
-  format(context.output-stream, "  pointer-type-name: %s;\n", dylan-pointer-name);
-  format(context.output-stream, "end C-struct;\n\n");
-  let num-methods = g-struct-info-get-n-methods(struct-info);
-  for (i from 0 below num-methods)
-    let function-info = g-struct-info-get-method(struct-info, i);
-    write-c-ffi-function(context, function-info, dylan-pointer-name);
-  end for;
+  if (~binding-already-exported?(context, dylan-pointer-name))
+    add-exported-binding(context, dylan-pointer-name);
+    format(context.output-stream, "define C-struct %s\n", dylan-name);
+    let num-fields = g-struct-info-get-n-fields(struct-info);
+    for (i from 0 below num-fields)
+      let field = g-struct-info-get-field(struct-info, i);
+      write-c-ffi-field(context, field, name);
+    end for;
+    format(context.output-stream, "  pointer-type-name: %s;\n", dylan-pointer-name);
+    format(context.output-stream, "end C-struct;\n\n");
+    let num-methods = g-struct-info-get-n-methods(struct-info);
+    for (i from 0 below num-methods)
+      let function-info = g-struct-info-get-method(struct-info, i);
+      write-c-ffi-function(context, function-info, dylan-pointer-name);
+    end for;
+  end if;
 end method;
 
 define method write-c-ffi (context, union-info, type == $GI-INFO-TYPE-UNION)
  => ()
   let name = g-base-info-get-name(union-info);
   let dylan-name = map-name(#"union", context.prefix, name);
-  add-exported-binding(context, dylan-name);
-  format(context.output-stream, "define C-union %s\n", dylan-name);
-  let num-fields = g-union-info-get-n-fields(union-info);
-  for (i from 0 below num-fields)
-    let field = g-union-info-get-field(union-info, i);
-    write-c-ffi-field(context, field, name);
-  end for;
-  format(context.output-stream, "end C-union;\n\n");
-  let num-methods = g-union-info-get-n-methods(union-info);
-  for (i from 0 below num-methods)
-    let function-info = g-union-info-get-method(union-info, i);
-    write-c-ffi-function(context, function-info, dylan-name);
-  end for;
+  if (~binding-already-exported?(context, dylan-name))
+    add-exported-binding(context, dylan-name);
+    format(context.output-stream, "define C-union %s\n", dylan-name);
+    let num-fields = g-union-info-get-n-fields(union-info);
+    for (i from 0 below num-fields)
+      let field = g-union-info-get-field(union-info, i);
+      write-c-ffi-field(context, field, name);
+    end for;
+    format(context.output-stream, "end C-union;\n\n");
+    let num-methods = g-union-info-get-n-methods(union-info);
+    for (i from 0 below num-methods)
+      let function-info = g-union-info-get-method(union-info, i);
+      write-c-ffi-function(context, function-info, dylan-name);
+    end for;
+  end if;
 end method;
 
 define function field-is-writable? (field) => (writable? :: <boolean>)
@@ -345,32 +366,34 @@ end function;
 define function write-c-ffi-function (context, function-info, container-name) => ()
   let symbol = g-function-info-get-symbol(function-info);
   let dylan-name = map-name(#"function", "", symbol);
-  add-exported-binding(context, dylan-name);
-  format(context.output-stream, "define C-function %s\n", dylan-name);
-  if (logand(g-function-info-get-flags(function-info), $GI-FUNCTION-IS-METHOD) ~= 0)
-    format(context.output-stream, "  input parameter self :: %s;\n", container-name);
-  end if;
-  let num-args = g-callable-info-get-n-args(function-info);
-  for (i from 0 below num-args)
-    let arg = g-callable-info-get-arg(function-info, i);
-    let arg-name = g-base-info-get-name(arg);
-    let arg-type = map-to-dylan-type(context, g-arg-info-get-type(arg));
-    if (g-arg-info-is-return-value(arg))
-      // XXX: We don't handle this. When does this happen?
-    else
-      let direction = direction-to-string(g-arg-info-get-direction(arg));
-      format(context.output-stream, "  %s parameter %s_ :: %s;\n", direction, arg-name, arg-type);
+  if (~binding-already-exported?(context, dylan-name))
+    add-exported-binding(context, dylan-name);
+    format(context.output-stream, "define C-function %s\n", dylan-name);
+    if (logand(g-function-info-get-flags(function-info), $GI-FUNCTION-IS-METHOD) ~= 0)
+      format(context.output-stream, "  input parameter self :: %s;\n", container-name);
     end if;
-    g-base-info-unref(arg);
-  end for;
-  let result-type = g-callable-info-get-return-type(function-info);
-  if ((g-type-info-get-tag(result-type) ~= $GI-TYPE-TAG-VOID) & ~g-type-info-is-pointer(result-type))
-    let dylan-result-type = map-to-dylan-type(context, result-type);
-    format(context.output-stream, "  result res :: %s;\n", dylan-result-type);
+    let num-args = g-callable-info-get-n-args(function-info);
+    for (i from 0 below num-args)
+      let arg = g-callable-info-get-arg(function-info, i);
+      let arg-name = g-base-info-get-name(arg);
+      let arg-type = map-to-dylan-type(context, g-arg-info-get-type(arg));
+      if (g-arg-info-is-return-value(arg))
+        // XXX: We don't handle this. When does this happen?
+      else
+        let direction = direction-to-string(g-arg-info-get-direction(arg));
+        format(context.output-stream, "  %s parameter %s_ :: %s;\n", direction, arg-name, arg-type);
+      end if;
+      g-base-info-unref(arg);
+    end for;
+    let result-type = g-callable-info-get-return-type(function-info);
+    if ((g-type-info-get-tag(result-type) ~= $GI-TYPE-TAG-VOID) & ~g-type-info-is-pointer(result-type))
+      let dylan-result-type = map-to-dylan-type(context, result-type);
+      format(context.output-stream, "  result res :: %s;\n", dylan-result-type);
+    end if;
+    let symbol = g-function-info-get-symbol(function-info);
+    format(context.output-stream, "  c-name: \"%s\";\n", symbol);
+    format(context.output-stream, "end;\n\n");
   end if;
-  let symbol = g-function-info-get-symbol(function-info);
-  format(context.output-stream, "  c-name: \"%s\";\n", symbol);
-  format(context.output-stream, "end;\n\n");
 end function;
 
 define function write-c-ffi-values (context, info) => (value-names :: <sequence>)
@@ -380,10 +403,12 @@ define function write-c-ffi-values (context, info) => (value-names :: <sequence>
     let value = g-enum-info-get-value(info, i);
     let name = g-base-info-get-attribute(value, "c:identifier");
     let dylan-name = map-name(#"constant", "", name);
-    add-exported-binding(context, dylan-name);
-    value-names := add!(value-names, dylan-name);
-    let integer-value = g-value-info-get-value(value);
-    format(context.output-stream, "define constant %s :: <integer> = %d;\n", dylan-name, integer-value);
+    if (~binding-already-exported?(context, dylan-name))
+      add-exported-binding(context, dylan-name);
+      value-names := add!(value-names, dylan-name);
+      let integer-value = g-value-info-get-value(value);
+      format(context.output-stream, "define constant %s :: <integer> = %d;\n", dylan-name, integer-value);
+    end if;
     g-base-info-unref(value);
   end for;
   value-names
