@@ -72,6 +72,17 @@ define function generate-dylan-file
     format(stream, "synopsis: generated bindings for the %s library\n", namespace);
     format(stream, "copyright: See LICENSE file in this distribution.\n\n");
     let repo = g-irepository-get-default();
+
+    let dependencies-c-array = g-irepository-get-dependencies(repo, namespace);
+    block (exit)
+      for (i from 0)
+        let dependency = element(dependencies-c-array, i);
+        if (null-pointer?(dependency)) exit() end if;
+        format(*standard-error*, "Detected dependency: %s\n", dependency);
+        force-output(*standard-error*);
+      end for;
+    end block;
+
     let prefix = g-irepository-get-c-prefix(repo, namespace);
     let context = make(<context>, stream: stream, prefix: prefix);
     let count = g-irepository-get-n-infos(repo, namespace);
