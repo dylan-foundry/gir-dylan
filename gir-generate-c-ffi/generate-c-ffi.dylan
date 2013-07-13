@@ -5,7 +5,7 @@ copyright: See LICENSE file in this distribution.
 
 define class <context> (<object>)
   slot exported-bindings = #();
-  slot exported-bindings-index = make(<set>);
+  constant slot exported-bindings-index = make(<set>);
   constant slot output-stream :: <stream>,
     required-init-keyword: stream:;
   constant slot prefix, required-init-keyword: prefix:;
