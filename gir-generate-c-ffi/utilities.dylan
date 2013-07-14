@@ -91,7 +91,7 @@ define function map-to-dylan-type (context, typeinfo) => (str :: <string>)
     $GI-TYPE-TAG-GSLIST => "<GSList> /* <C-XXX-gslist> */";
     $GI-TYPE-TAG-GHASH => "<GHashTable> /* <C-XXX-ghash> */";
     $GI-TYPE-TAG-ERROR => "<GError> /* <C-XXX-error> */";
-    $GI-TYPE-TAG-UNICHAR => "<object> /* <C-XXX-unichar> */";
+    $GI-TYPE-TAG-UNICHAR => "<C-unsigned-int> /* <C-XXX-unichar> */";
   end select
 end function;
 
