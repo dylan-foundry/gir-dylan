@@ -45,8 +45,13 @@ define function generate-c-ffi
     (namespace :: <string>, version :: <string>)
  => ()
   let project-dir = generate-directory(namespace, version);
-  let exported-bindings = generate-dylan-file(project-dir, namespace, version);
-  generate-library-file(project-dir, namespace, version, exported-bindings);
+  let (exported-bindings, dependencies)
+    = generate-dylan-file(project-dir, namespace, version);
+  generate-library-file(project-dir,
+                        namespace,
+                        version,
+                        exported-bindings,
+                        dependencies);
   generate-lid-file(project-dir, namespace, version);
 end function;
 
@@ -63,7 +68,7 @@ define function generate-dylan-file
     (project-dir :: <directory-locator>,
      namespace :: <string>,
      version :: <string>)
- => (exported-bindings :: <sequence>)
+ => (exported-bindings :: <sequence>, dependencies :: <sequence>)
   let project-name = make-project-name(namespace, version);
   let target-path = make-target-path(project-dir, project-name, ".dylan");
   with-open-file (stream = target-path, direction: #"output",
@@ -74,11 +79,13 @@ define function generate-dylan-file
     let repo = g-irepository-get-default();
 
     let dependencies-c-array = g-irepository-get-dependencies(repo, namespace);
+    let dependencies = #[];
     if (~null-pointer?(dependencies-c-array))
       block (exit)
         for (i from 0)
           let dependency = element(dependencies-c-array, i);
           if (null-pointer?(dependency)) exit() end if;
+          dependencies := add(dependencies, dependency);
           format(*standard-error*, "Detected dependency: %s\n", dependency);
           force-output(*standard-error*);
         end for;
@@ -96,15 +103,30 @@ define function generate-dylan-file
         force-output(context.output-stream);
       end if;
     end for;
-    context.exported-bindings
+    values(context.exported-bindings, dependencies)
   end with-open-file
 end function;
+
+define function library-name-from-dependency
+    (dependency :: <string>)
+ => (library-name :: <string>)
+  let library-name = make(<stretchy-vector>);
+  // The library name is the first part of the string, before the '-'
+  block (exit)
+    for (ch in dependency)
+      if (ch = '-') exit() end if;
+      add!(library-name, ch);
+    end for;
+  end block;
+  lowercase(as(<byte-string>, library-name))
+end function library-name-from-dependency;
 
 define function generate-library-file
     (project-dir :: <directory-locator>,
      namespace :: <string>,
      version :: <string>,
-     exported-bindings :: <sequence>)
+     exported-bindings :: <sequence>,
+     dependencies :: <sequence>)
  => ()
   let target-path = make-target-path(project-dir, "library.dylan");
   with-open-file (stream = target-path, direction: #"output",
@@ -117,6 +139,9 @@ define function generate-library-file
     format(stream, "  use dylan;\n");
     format(stream, "  use common-dylan;\n");
     format(stream, "  use c-ffi;\n");
+    for (dependency in dependencies)
+      format(stream, "  use %s;\n", library-name-from-dependency(dependency));
+    end for;
     format(stream, "\n");
     format(stream, "  export %s;\n", lower-namespace);
     format(stream, "end library;\n");
@@ -125,6 +150,9 @@ define function generate-library-file
     format(stream, "  use dylan;\n");
     format(stream, "  use common-dylan;\n");
     format(stream, "  use c-ffi;\n");
+    for (dependency in dependencies)
+      format(stream, "  use %s;\n", library-name-from-dependency(dependency));
+    end for;
     format(stream, "\n");
     format(stream, "  export");
     for (binding in exported-bindings,
