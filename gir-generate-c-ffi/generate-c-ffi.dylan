@@ -204,10 +204,10 @@ define function  generate-jam-file
       lower-namespace := "gtk+";
     end if;
 
-    format(stream, "LINKLIBS += `pkg-config --libs %s-%s`;\n",
+    format(stream, "LINKLIBS += `pkg-config --libs %s-%s` ;\n",
            lower-namespace,
            version);
-    format(stream, "CCFLAGS += `pkg-config --cflags %s-%s`;\n",
+    format(stream, "CCFLAGS += `pkg-config --cflags %s-%s` ;\n",
            lower-namespace,
            version);
   end with-open-file;
