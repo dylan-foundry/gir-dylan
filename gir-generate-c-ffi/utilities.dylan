@@ -47,19 +47,22 @@ end function;
 define function map-interface-to-dylan-type (context, typeinfo) => (str :: <string>)
   let interface-info = g-type-info-get-interface(typeinfo);
   let type-tag = g-base-info-get-type(interface-info);
+  let repo = g-irepository-get-default();
+  let namespace = g-base-info-get-namespace(interface-info);
+  let prefix = g-irepository-get-c-prefix(repo, namespace);
   case (type-tag = $GI-INFO-TYPE-CALLBACK)
          => "<C-function-pointer>";
        (type-tag = $GI-INFO-TYPE-BOXED |
         type-tag = $GI-INFO-TYPE-STRUCT)
-         => map-name(#"type-pointer", context.prefix, g-base-info-get-name(interface-info));
+         => map-name(#"type-pointer", prefix, g-base-info-get-name(interface-info));
        (type-tag = $GI-INFO-TYPE-UNION)
-         => map-name(#"union", context.prefix, g-base-info-get-name(interface-info));
+         => map-name(#"union", prefix, g-base-info-get-name(interface-info));
        (type-tag = $GI-INFO-TYPE-ENUM |
         type-tag = $GI-INFO-TYPE-FLAGS)
-         => map-name(#"enum", context.prefix, g-base-info-get-name(interface-info));
+         => map-name(#"enum", prefix, g-base-info-get-name(interface-info));
        (type-tag = $GI-INFO-TYPE-INTERFACE |
         type-tag = $GI-INFO-TYPE-OBJECT)
-         => map-name(#"type-pointer", context.prefix, g-base-info-get-name(interface-info));
+         => map-name(#"type-pointer", prefix, g-base-info-get-name(interface-info));
        otherwise
          => "<object> /* <C-XXX-interface> */";
   end case
