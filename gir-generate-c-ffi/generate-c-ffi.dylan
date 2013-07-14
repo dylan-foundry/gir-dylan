@@ -53,6 +53,7 @@ define function generate-c-ffi
                         exported-bindings,
                         dependencies);
   generate-lid-file(project-dir, namespace, version);
+  generate-jam-file(project-dir, namespace);
 end function;
 
 define function generate-directory
@@ -181,9 +182,36 @@ define function generate-lid-file
     format(stream, "executable: %s\n", project-name);
     format(stream, "files: library\n");
     format(stream, "       %s\n", lower-namespace);
+    format(stream, "jam-includes: %s.jam\n", project-name);
     // XXX: Need to output C-libraries here.
   end with-open-file;
 end function;
+
+define function  generate-jam-file
+    (project-dir :: <directory-locator>,
+     namespace :: <string>)
+ => ()
+  let repo = g-irepository-get-default();
+  let version = g-irepository-get-version(repo, namespace);
+  let project-name = make-project-name(namespace, version, include-dylan: #t);
+  let target-path = make-target-path(project-dir, project-name, ".jam");
+  with-open-file (stream = target-path, direction: #"output",
+                  if-does-not-exist: #"create")
+    let lower-namespace = lowercase(namespace);
+
+    // Handle gtk namespace being different from the pkg-config name
+    if (lower-namespace = "gtk")
+      lower-namespace := "gtk+";
+    end if;
+
+    format(stream, "LINKLIBS += `pkg-config --libs %s-%s`;\n",
+           lower-namespace,
+           version);
+    format(stream, "CCFLAGS += `pkg-config --cflags %s-%s`;\n",
+           lower-namespace,
+           version);
+  end with-open-file;
+end function generate-jam-file;
 
 define function name-for-type (type) => (name :: <string>)
   select (type)
