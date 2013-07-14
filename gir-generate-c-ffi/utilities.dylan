@@ -82,16 +82,16 @@ define function map-to-dylan-type (context, typeinfo) => (str :: <string>)
     $GI-TYPE-TAG-UINT64 => "<C-unsigned-long>";
     $GI-TYPE-TAG-FLOAT => "<C-float>";
     $GI-TYPE-TAG-DOUBLE => "<C-double>";
-    $GI-TYPE-TAG-GTYPE => "<object> /* <C-XXX-gtype> */";
+    $GI-TYPE-TAG-GTYPE => "<C-long>";
     $GI-TYPE-TAG-UTF8 => "<C-string>";
     $GI-TYPE-TAG-FILENAME => "<C-string>";
-    $GI-TYPE-TAG-ARRAY => "<object> /* <C-XXX-array> */";
+    $GI-TYPE-TAG-ARRAY => "<C-void*>";
     $GI-TYPE-TAG-INTERFACE => map-interface-to-dylan-type(context, typeinfo);
-    $GI-TYPE-TAG-GLIST => "<object> /* <C-XXX-glist> */";
-    $GI-TYPE-TAG-GSLIST => "<object> /* <C-XXX-gslist> */";
-    $GI-TYPE-TAG-GHASH => "<object> /* <C-XXX-ghash> */";
-    $GI-TYPE-TAG-ERROR => "<object> /* <C-XXX-error> */";
-    $GI-TYPE-TAG-UNICHAR => "<object> /* <C-XXX-unichar> */";
+    $GI-TYPE-TAG-GLIST => "<GList>";
+    $GI-TYPE-TAG-GSLIST => "<GSList>";
+    $GI-TYPE-TAG-GHASH => "<GHashTable>";
+    $GI-TYPE-TAG-ERROR => "<GError>";
+    $GI-TYPE-TAG-UNICHAR => "<C-unsigned-int>";
   end select
 end function;
 

@@ -74,14 +74,16 @@ define function generate-dylan-file
     let repo = g-irepository-get-default();
 
     let dependencies-c-array = g-irepository-get-dependencies(repo, namespace);
-    block (exit)
-      for (i from 0)
-        let dependency = element(dependencies-c-array, i);
-        if (null-pointer?(dependency)) exit() end if;
-        format(*standard-error*, "Detected dependency: %s\n", dependency);
-        force-output(*standard-error*);
-      end for;
-    end block;
+    if (~null-pointer?(dependencies-c-array))
+      block (exit)
+        for (i from 0)
+          let dependency = element(dependencies-c-array, i);
+          if (null-pointer?(dependency)) exit() end if;
+          format(*standard-error*, "Detected dependency: %s\n", dependency);
+          force-output(*standard-error*);
+        end for;
+      end block;
+    end if;
 
     let prefix = g-irepository-get-c-prefix(repo, namespace);
     let context = make(<context>, stream: stream, prefix: prefix);
