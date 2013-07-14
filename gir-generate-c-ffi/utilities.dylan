@@ -85,13 +85,13 @@ define function map-to-dylan-type (context, typeinfo) => (str :: <string>)
     $GI-TYPE-TAG-GTYPE => "<C-long>";
     $GI-TYPE-TAG-UTF8 => "<C-string>";
     $GI-TYPE-TAG-FILENAME => "<C-string>";
-    $GI-TYPE-TAG-ARRAY => "<C-void*> /* <C-XXX-array> */";
+    $GI-TYPE-TAG-ARRAY => "<C-void*>";
     $GI-TYPE-TAG-INTERFACE => map-interface-to-dylan-type(context, typeinfo);
-    $GI-TYPE-TAG-GLIST => "<GList> /* <C-XXX-glist> */";
-    $GI-TYPE-TAG-GSLIST => "<GSList> /* <C-XXX-gslist> */";
-    $GI-TYPE-TAG-GHASH => "<GHashTable> /* <C-XXX-ghash> */";
-    $GI-TYPE-TAG-ERROR => "<GError> /* <C-XXX-error> */";
-    $GI-TYPE-TAG-UNICHAR => "<C-unsigned-int> /* <C-XXX-unichar> */";
+    $GI-TYPE-TAG-GLIST => "<GList>";
+    $GI-TYPE-TAG-GSLIST => "<GSList>";
+    $GI-TYPE-TAG-GHASH => "<GHashTable>";
+    $GI-TYPE-TAG-ERROR => "<GError>";
+    $GI-TYPE-TAG-UNICHAR => "<C-unsigned-int>";
   end select
 end function;
 
