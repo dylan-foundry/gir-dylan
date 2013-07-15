@@ -403,19 +403,22 @@ define method write-c-ffi (context, union-info, type == $GI-INFO-TYPE-UNION)
  => ()
   let name = g-base-info-get-name(union-info);
   let dylan-name = map-name(#"union", context.prefix, name);
+  let dylan-pointer-name = map-name(#"union-pointer", context.prefix, name);
   if (~binding-already-exported?(context, dylan-name))
     add-exported-binding(context, dylan-name);
+    add-exported-binding(context, dylan-pointer-name);
     format(context.output-stream, "define C-union %s\n", dylan-name);
     let num-fields = g-union-info-get-n-fields(union-info);
     for (i from 0 below num-fields)
       let field = g-union-info-get-field(union-info, i);
       write-c-ffi-field(context, field, name);
     end for;
+    format(context.output-stream, "  pointer-type-name: %s;\n", dylan-pointer-name);
     format(context.output-stream, "end C-union;\n\n");
     let num-methods = g-union-info-get-n-methods(union-info);
     for (i from 0 below num-methods)
       let function-info = g-union-info-get-method(union-info, i);
-      write-c-ffi-function(context, function-info, dylan-name);
+      write-c-ffi-function(context, function-info, dylan-pointer-name);
     end for;
   end if;
 end method;

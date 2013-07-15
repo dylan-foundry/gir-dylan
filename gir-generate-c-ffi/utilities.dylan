@@ -9,14 +9,13 @@ define method map-name
  => (result :: <string>);
   let buffer = make(<stretchy-vector>);
 
-  if (category == #"type")
+  if ((category == #"type") |
+      (category == #"union"))
     add!(buffer, '<');
     add!(buffer, '_');
-  elseif (category == #"type-pointer")
-    add!(buffer, '<');
-  elseif (category == #"union")
-    add!(buffer, '<');
-  elseif (category == #"enum")
+  elseif ((category == #"type-pointer") |
+           (category == #"union-pointer") |
+           (category == #"enum"))
     add!(buffer, '<');
   elseif (category == #"constant")
     add!(buffer, '$');
@@ -30,7 +29,7 @@ define method map-name
   end for;
 
   if (category == #"type" | category == #"type-pointer" | category == #"union" |
-      category == #"enum")
+      category == #"enum" | category == #"union-pointer")
     add!(buffer, '>');
   end if;
   as(<byte-string>, buffer);
@@ -56,7 +55,11 @@ define function map-interface-to-dylan-type (context, typeinfo) => (str :: <stri
         type-tag = $GI-INFO-TYPE-STRUCT)
          => map-name(#"type-pointer", prefix, g-base-info-get-name(interface-info));
        (type-tag = $GI-INFO-TYPE-UNION)
-         => map-name(#"union", prefix, g-base-info-get-name(interface-info));
+         => if (g-type-info-is-pointer(typeinfo))
+              map-name(#"union-pointer", prefix, g-base-info-get-name(interface-info));
+            else
+              map-name(#"union", prefix, g-base-info-get-name(interface-info));
+            end if;
        (type-tag = $GI-INFO-TYPE-ENUM |
         type-tag = $GI-INFO-TYPE-FLAGS)
          => map-name(#"enum", prefix, g-base-info-get-name(interface-info));
