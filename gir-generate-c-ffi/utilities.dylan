@@ -68,6 +68,49 @@ define function map-interface-to-dylan-type (context, typeinfo) => (str :: <stri
   end case
 end function map-interface-to-dylan-type;
 
+define function map-array-to-dylan-type (context, typeinfo) => (str :: <string>)
+  let array-type = g-type-info-get-array-type(typeinfo);
+  let param-type-info = g-type-info-get-param-type(typeinfo, 0);
+  let param-type-tag = g-type-info-get-tag(param-type-info);
+  if (array-type = $GI-ARRAY-TYPE-C)
+    select (param-type-tag)
+      // This should never happen, and if it happens it won't work.
+      $GI-TYPE-TAG-VOID => if (g-type-info-is-pointer(param-type-info)) "<C-void*>" else "XXX" end if;
+      $GI-TYPE-TAG-BOOLEAN => "<C-int*>"; // gboolean is defined as int
+      $GI-TYPE-TAG-INT8 => "<C-signed-char*>";
+      $GI-TYPE-TAG-UINT8 => "<C-unsigned-char*>";
+      $GI-TYPE-TAG-INT16 => "<C-signed-short*>";
+      $GI-TYPE-TAG-UINT16 => "<C-unsigned-short*>";
+      $GI-TYPE-TAG-INT32 => "<C-signed-int*>";
+      $GI-TYPE-TAG-UINT32 => "<C-unsigned-int*>";
+      $GI-TYPE-TAG-INT64 => "<C-signed-long*>";
+      $GI-TYPE-TAG-UINT64 => "<C-unsigned-long*>";
+      $GI-TYPE-TAG-FLOAT => "<C-float*>";
+      $GI-TYPE-TAG-DOUBLE => "<C-double*>";
+      $GI-TYPE-TAG-GTYPE => "<C-long*>";
+      $GI-TYPE-TAG-UTF8 => "<C-string*>";
+      $GI-TYPE-TAG-FILENAME => "<C-string*>";
+      // map this parameters to unsigned char so we can compile
+      $GI-TYPE-TAG-ARRAY => "<C-unsigned-char*> /* Not supported */";
+      $GI-TYPE-TAG-INTERFACE => "<C-unsigned-char*> /* Not supported */";
+      $GI-TYPE-TAG-GLIST => "<GList>";
+      $GI-TYPE-TAG-GSLIST => "<GSList>";
+      $GI-TYPE-TAG-GHASH => "<GHashTable>";
+      $GI-TYPE-TAG-ERROR => "<GError>";
+      $GI-TYPE-TAG-UNICHAR => "<C-unsigned-int*>";
+    end select;
+  elseif (array-type = $GI-ARRAY-TYPE-ARRAY)
+    // Not sure about this
+    "<GArray>";
+  elseif (array-type = $GI-ARRAY-TYPE-PTR-ARRAY)
+    // Not sure about this
+    "<GPtrArray>";
+  elseif (array-type = $GI-ARRAY-TYPE-BYTE-ARRAY)
+    // Not sure about this
+    "<GByteArray>";
+  end if
+end function map-array-to-dylan-type;
+
 define function map-to-dylan-type (context, typeinfo) => (str :: <string>)
   select (g-type-info-get-tag(typeinfo))
     $GI-TYPE-TAG-VOID => if (g-type-info-is-pointer(typeinfo)) "<C-void*>" else "XXX" end if;
@@ -85,7 +128,7 @@ define function map-to-dylan-type (context, typeinfo) => (str :: <string>)
     $GI-TYPE-TAG-GTYPE => "<C-long>";
     $GI-TYPE-TAG-UTF8 => "<C-string>";
     $GI-TYPE-TAG-FILENAME => "<C-string>";
-    $GI-TYPE-TAG-ARRAY => "<C-void*>";
+    $GI-TYPE-TAG-ARRAY => map-array-to-dylan-type(context, typeinfo);
     $GI-TYPE-TAG-INTERFACE => map-interface-to-dylan-type(context, typeinfo);
     $GI-TYPE-TAG-GLIST => "<GList>";
     $GI-TYPE-TAG-GSLIST => "<GSList>";
