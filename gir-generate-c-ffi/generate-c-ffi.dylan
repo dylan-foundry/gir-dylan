@@ -279,16 +279,8 @@ define method write-c-ffi (context, enum-info, type == $GI-INFO-TYPE-ENUM)
   let dylan-enum-name = map-name(#"enum", context.prefix, enum-name);
   if (~binding-already-exported?(context, dylan-enum-name))
     add-exported-binding(context, dylan-enum-name);
-    if (size(value-names) > 64)
-      let error-message = format-to-string("WARNING: skipping definition of %s due to bug #491, see https://github.com/dylan-lang/opendylan/issues/491\n", dylan-enum-name);
-      format(context.output-stream, "/* %s */\n", error-message);
-      format(*standard-error*, error-message);
-      force-output(*standard-error*);
-      format(context.output-stream, "define constant %s = <C-int>;\n\n", dylan-enum-name);
-    else
-      let joined-value-names = join(value-names, ", ");
-      format(context.output-stream, "define constant %s = one-of(%s);\n\n", dylan-enum-name, joined-value-names);
-    end if;
+    // We use <C-int> rather than one-of because one-of isn't a C-FFI designator class
+    format(context.output-stream, "define constant %s = <C-int>;\n\n", dylan-enum-name);
   end if;
 end method;
 
