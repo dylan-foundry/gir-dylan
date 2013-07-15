@@ -459,17 +459,18 @@ define function write-c-ffi-function (context, function-info, container-name) =>
     for (i from 0 below num-args)
       let arg = g-callable-info-get-arg(function-info, i);
       let arg-name = g-base-info-get-name(arg);
-      let arg-type = map-to-dylan-type(context, g-arg-info-get-type(arg));
       if (g-arg-info-is-return-value(arg))
         // XXX: We don't handle this. When does this happen?
       else
         let direction = direction-to-string(g-arg-info-get-direction(arg));
+        let arg-type = map-to-dylan-type(context, g-arg-info-get-type(arg), direction: direction);
         format(context.output-stream, "  %s parameter %s_ :: %s;\n", direction, arg-name, arg-type);
       end if;
       g-base-info-unref(arg);
     end for;
     let result-type = g-callable-info-get-return-type(function-info);
-    if ((g-type-info-get-tag(result-type) ~= $GI-TYPE-TAG-VOID) & ~g-type-info-is-pointer(result-type))
+    if ((g-type-info-get-tag(result-type) ~= $GI-TYPE-TAG-VOID) &
+        ~g-type-info-is-pointer(result-type))
       let dylan-result-type = map-to-dylan-type(context, result-type);
       format(context.output-stream, "  result res :: %s;\n", dylan-result-type);
     end if;
