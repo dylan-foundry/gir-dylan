@@ -8,7 +8,6 @@ define class <context> (<object>)
   constant slot exported-bindings-index = make(<set>);
   constant slot output-stream :: <stream>,
     required-init-keyword: stream:;
-  constant slot prefix, required-init-keyword: prefix:;
 end class;
 
 define function add-exported-binding
@@ -93,8 +92,7 @@ define function generate-dylan-file
       end block;
     end if;
 
-    let prefix = g-irepository-get-c-prefix(repo, namespace);
-    let context = make(<context>, stream: stream, prefix: prefix);
+    let context = make(<context>, stream: stream);
     let count = g-irepository-get-n-infos(repo, namespace);
     for (i from 0 below count)
       let info = g-irepository-get-info(repo, namespace, i);
@@ -259,8 +257,7 @@ end method;
 
 define method write-c-ffi (context, constant-info, type == $GI-INFO-TYPE-CONSTANT)
  => ()
-  let name = g-base-info-get-name(constant-info);
-  let dylan-name = map-name(#"constant", "", name);
+  let dylan-name = dylanize(concatenate("$", g-base-info-get-name(constant-info)));
   if (~binding-already-exported?(context, dylan-name))
     add-exported-binding(context, dylan-name);
     let arg = make(<GIArgument>);
@@ -275,8 +272,7 @@ end method;
 define method write-c-ffi (context, enum-info, type == $GI-INFO-TYPE-ENUM)
  => ()
   let value-names = write-c-ffi-values(context, enum-info);
-  let enum-name  = g-base-info-get-name(enum-info);
-  let dylan-enum-name = map-name(#"enum", context.prefix, enum-name);
+  let dylan-enum-name = get-type-name(#"enum", enum-info);
   if (~binding-already-exported?(context, dylan-enum-name))
     add-exported-binding(context, dylan-enum-name);
     // We use <C-int> rather than one-of because one-of isn't a C-FFI designator class
@@ -287,8 +283,7 @@ end method;
 define method write-c-ffi (context, flags-info, type == $GI-INFO-TYPE-FLAGS)
  => ()
   write-c-ffi-values(context, flags-info);
-  let flags-name  = g-base-info-get-name(flags-info);
-  let dylan-flags-name = map-name(#"enum", context.prefix, flags-name);
+  let dylan-flags-name = get-type-name(#"enum", flags-info);
   add-exported-binding(context, dylan-flags-name);
   format(context.output-stream, "define constant %s = <C-int>;\n\n", dylan-flags-name);
 end method;
@@ -300,9 +295,8 @@ end method;
 
 define method write-c-ffi (context, interface-info, type == $GI-INFO-TYPE-INTERFACE)
  => ()
-  let name = g-base-info-get-name(interface-info);
-  let dylan-name = map-name(#"type", context.prefix, name);
-  let dylan-pointer-name = map-name(#"type-pointer", context.prefix, name);
+  let dylan-name = get-type-name(#"type", interface-info);
+  let dylan-pointer-name = get-type-name(#"type-pointer", interface-info);
   if (~binding-already-exported?(context, dylan-pointer-name))
     let num-prerequisites = g-interface-info-get-n-prerequisites(interface-info);
     format(context.output-stream, "// Interface\n");
@@ -314,8 +308,7 @@ define method write-c-ffi (context, interface-info, type == $GI-INFO-TYPE-INTERF
       let prerequisites-name = #[];
       for (i from 0 below num-prerequisites)
         let prerequisite = g-interface-info-get-prerequisite(interface-info, i);
-        let prerequisite-name = g-base-info-get-name(prerequisite);
-        let prerequisite-dylan-name = map-name(#"type", context.prefix, prerequisite-name);
+        let prerequisite-dylan-name = get-type-name(#"type", prerequisite);
         prerequisites-name := add!(prerequisites-name, prerequisite-dylan-name);
       end for;
       let joined-names = join(prerequisites-name, ", ");
@@ -335,8 +328,8 @@ end method;
 define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
  => ()
   let name = g-base-info-get-name(object-info);
-  let dylan-name = map-name(#"type", context.prefix, name);
-  let dylan-pointer-name = map-name(#"type-pointer", context.prefix, name);
+  let dylan-name = get-type-name(#"type", object-info);
+  let dylan-pointer-name = get-type-name(#"type-pointer", object-info);
   if (~binding-already-exported?(context, dylan-pointer-name))
     add-exported-binding(context, dylan-pointer-name);
 
@@ -347,8 +340,7 @@ define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
       format(context.output-stream, "define C-struct %s\n", dylan-name);
       c-definer := "struct";
     else
-      let parent-name = g-base-info-get-name(parent-info);
-      let parent-dylan-name = map-name(#"type", context.prefix, parent-name);
+      let parent-dylan-name = get-type-name(#"type", parent-info);
       format(context.output-stream, "define C-subtype %s (%s)\n", dylan-name, parent-dylan-name);
       g-base-info-unref(parent-info);
     end if;
@@ -371,8 +363,8 @@ end method;
 define method write-c-ffi (context, struct-info, type == $GI-INFO-TYPE-STRUCT)
  => ()
   let name = g-base-info-get-name(struct-info);
-  let dylan-name = map-name(#"type", context.prefix, name);
-  let dylan-pointer-name = map-name(#"type-pointer", context.prefix, name);
+  let dylan-name = get-type-name(#"type", struct-info);
+  let dylan-pointer-name = get-type-name(#"type-pointer", struct-info);
   if (~binding-already-exported?(context, dylan-pointer-name))
     add-exported-binding(context, dylan-pointer-name);
     format(context.output-stream, "define C-struct %s\n", dylan-name);
@@ -394,8 +386,8 @@ end method;
 define method write-c-ffi (context, union-info, type == $GI-INFO-TYPE-UNION)
  => ()
   let name = g-base-info-get-name(union-info);
-  let dylan-name = map-name(#"union", context.prefix, name);
-  let dylan-pointer-name = map-name(#"union-pointer", context.prefix, name);
+  let dylan-name = get-type-name(#"union", union-info);
+  let dylan-pointer-name = get-type-name(#"union-pointer", union-info);
   if (~binding-already-exported?(context, dylan-name))
     add-exported-binding(context, dylan-name);
     add-exported-binding(context, dylan-pointer-name);
@@ -426,8 +418,8 @@ define function field-is-readable? (field) => (readable? :: <boolean>)
 end function field-is-readable?;
 
 define function write-c-ffi-field (context, field, container-name) => ()
-  let prefix = lowercase(concatenate(context.prefix, container-name, "-"));
-  let field-name = map-name(#"field", prefix, g-base-info-get-name(field));
+  let extra-prefix = lowercase(concatenate(container-name, "-"));
+  let field-name = get-type-name(#"field", field, extra-prefix: extra-prefix);
   let field-type = map-to-dylan-type(context, g-field-info-get-type(field));
   let writable? = field-is-writable?(field);
   let readable? = field-is-readable?(field);
@@ -447,8 +439,7 @@ define function write-c-ffi-field (context, field, container-name) => ()
 end function;
 
 define function write-c-ffi-function (context, function-info, container-name) => ()
-  let symbol = g-function-info-get-symbol(function-info);
-  let dylan-name = map-name(#"function", "", symbol);
+  let dylan-name = dylanize(g-function-info-get-symbol(function-info));
   if (~binding-already-exported?(context, dylan-name))
     add-exported-binding(context, dylan-name);
     format(context.output-stream, "define C-function %s\n", dylan-name);
@@ -487,7 +478,7 @@ define function write-c-ffi-values (context, info) => (value-names :: <sequence>
   for (i from 0 below num-values)
     let value = g-enum-info-get-value(info, i);
     let name = g-base-info-get-attribute(value, "c:identifier");
-    let dylan-name = map-name(#"constant", "", name);
+    let dylan-name = dylanize(concatenate("$", name));
     if (~binding-already-exported?(context, dylan-name))
       add-exported-binding(context, dylan-name);
       value-names := add!(value-names, dylan-name);

@@ -3,37 +3,53 @@ synopsis: generate c-ffi bindings using gobject-introspection
 author: Bruce Mitchener, Jr.
 copyright: See LICENSE file in this distribution.
 
-/* This is borrowed from code in melange */
-define method map-name
-    (category :: <symbol>, prefix :: <string>, name :: <string>)
- => (result :: <string>);
+/* Some of this is borrowed from code in melange */
+define method get-type-name
+    (category :: <symbol>, type-info,
+     #key extra-prefix = #f)
+ => (result :: <string>)
+  // Prepare some information ...
+  let repo = g-irepository-get-default();
+  let namespace = g-base-info-get-namespace(type-info);
+  let prefix = g-irepository-get-c-prefix(repo, namespace);
+  let name = g-base-info-get-name(type-info);
+
   let buffer = make(<stretchy-vector>);
+
+  add!(buffer, '<');
 
   if ((category == #"type") |
       (category == #"union"))
-    add!(buffer, '<');
     add!(buffer, '_');
-  elseif ((category == #"type-pointer") |
-           (category == #"union-pointer") |
-           (category == #"enum"))
-    add!(buffer, '<');
-  elseif (category == #"constant")
-    add!(buffer, '$');
   end if;
 
   buffer := concatenate(buffer, prefix);
+
+  if (extra-prefix)
+    buffer := concatenate(buffer, extra-prefix);
+  end if;
 
   for (non-underline = #f then non-underline | char ~= '_',
        char in name)
     add!(buffer, if (non-underline & char == '_') '-' else char end if);
   end for;
 
-  if (category == #"type" | category == #"type-pointer" | category == #"union" |
-      category == #"enum" | category == #"union-pointer")
-    add!(buffer, '>');
-  end if;
+  add!(buffer, '>');
+
   as(<byte-string>, buffer);
-end method map-name;
+end method get-type-name;
+
+/* Some of this is borrowed from code in melange */
+define function dylanize (name :: <string>) => (dylan-name :: <string>)
+  let buffer = make(<stretchy-vector>);
+
+  for (non-underline = #f then non-underline | char ~= '_',
+       char in name)
+    add!(buffer, if (non-underline & char == '_') '-' else char end if);
+  end for;
+
+  as(<byte-string>, buffer);
+end function dylanize;
 
 define function direction-to-string (direction) => (dir :: <string>)
   select (direction)
@@ -43,37 +59,34 @@ define function direction-to-string (direction) => (dir :: <string>)
   end select;
 end function;
 
-define function map-interface-to-dylan-type (context, typeinfo) => (str :: <string>)
-  let interface-info = g-type-info-get-interface(typeinfo);
+define function map-interface-to-dylan-type (context, type-info) => (str :: <string>)
+  let interface-info = g-type-info-get-interface(type-info);
   let type-tag = g-base-info-get-type(interface-info);
-  let repo = g-irepository-get-default();
-  let namespace = g-base-info-get-namespace(interface-info);
-  let prefix = g-irepository-get-c-prefix(repo, namespace);
   case (type-tag = $GI-INFO-TYPE-CALLBACK)
          => "<C-function-pointer>";
        (type-tag = $GI-INFO-TYPE-BOXED |
         type-tag = $GI-INFO-TYPE-STRUCT)
-         => map-name(#"type-pointer", prefix, g-base-info-get-name(interface-info));
+         => get-type-name(#"type-pointer", interface-info);
        (type-tag = $GI-INFO-TYPE-UNION)
-         => if (g-type-info-is-pointer(typeinfo))
-              map-name(#"union-pointer", prefix, g-base-info-get-name(interface-info));
+         => if (g-type-info-is-pointer(type-info))
+              get-type-name(#"union-pointer", interface-info);
             else
-              map-name(#"union", prefix, g-base-info-get-name(interface-info));
+              get-type-name(#"union", interface-info);
             end if;
        (type-tag = $GI-INFO-TYPE-ENUM |
         type-tag = $GI-INFO-TYPE-FLAGS)
-         => map-name(#"enum", prefix, g-base-info-get-name(interface-info));
+         => get-type-name(#"enum", interface-info);
        (type-tag = $GI-INFO-TYPE-INTERFACE |
         type-tag = $GI-INFO-TYPE-OBJECT)
-         => map-name(#"type-pointer", prefix, g-base-info-get-name(interface-info));
+         => get-type-name(#"type-pointer", interface-info);
        otherwise
          => "<object> /* <C-XXX-interface> */";
   end case
 end function map-interface-to-dylan-type;
 
-define function map-array-to-dylan-type (context, typeinfo) => (str :: <string>)
-  let array-type = g-type-info-get-array-type(typeinfo);
-  let param-type-info = g-type-info-get-param-type(typeinfo, 0);
+define function map-array-to-dylan-type (context, type-info) => (str :: <string>)
+  let array-type = g-type-info-get-array-type(type-info);
+  let param-type-info = g-type-info-get-param-type(type-info, 0);
   let param-type-tag = g-type-info-get-tag(param-type-info);
   if (array-type = $GI-ARRAY-TYPE-C)
     select (param-type-tag)
@@ -115,11 +128,11 @@ define function map-array-to-dylan-type (context, typeinfo) => (str :: <string>)
 end function map-array-to-dylan-type;
 
 define function map-to-dylan-type
-    (context, typeinfo, #key direction = "input")
+    (context, type-info, #key direction = "input")
  => (str :: <string>)
   // Some output parameters are not marked as pointers even if they are
-  let is-pointer? = g-type-info-is-pointer(typeinfo) | direction ~= "input";
-  select (g-type-info-get-tag(typeinfo))
+  let is-pointer? = g-type-info-is-pointer(type-info) | direction ~= "input";
+  select (g-type-info-get-tag(type-info))
     $GI-TYPE-TAG-VOID
       => if (is-pointer?) "<C-void*>" else "XXX" end if;
     $GI-TYPE-TAG-BOOLEAN
@@ -151,9 +164,9 @@ define function map-to-dylan-type
     $GI-TYPE-TAG-FILENAME
       => "<C-string>";
     $GI-TYPE-TAG-ARRAY
-      => map-array-to-dylan-type(context, typeinfo);
+      => map-array-to-dylan-type(context, type-info);
     $GI-TYPE-TAG-INTERFACE
-      => map-interface-to-dylan-type(context, typeinfo);
+      => map-interface-to-dylan-type(context, type-info);
     $GI-TYPE-TAG-GLIST
       => "<GList>";
     $GI-TYPE-TAG-GSLIST
