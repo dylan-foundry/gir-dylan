@@ -5,8 +5,7 @@ copyright: See LICENSE file in this distribution.
 
 /* Some of this is borrowed from code in melange */
 define method get-type-name
-    (category :: <symbol>, type-info,
-     #key extra-prefix = #f)
+    (category :: <symbol>, type-info)
  => (result :: <string>)
   // Prepare some information ...
   let repo = g-irepository-get-default();
@@ -24,10 +23,6 @@ define method get-type-name
   end if;
 
   buffer := concatenate(buffer, prefix);
-
-  if (extra-prefix)
-    buffer := concatenate(buffer, extra-prefix);
-  end if;
 
   for (non-underline = #f then non-underline | char ~= '_',
        char in name)

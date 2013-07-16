@@ -418,8 +418,10 @@ define function field-is-readable? (field) => (readable? :: <boolean>)
 end function field-is-readable?;
 
 define function write-c-ffi-field (context, field, container-name) => ()
-  let extra-prefix = lowercase(concatenate(container-name, "-"));
-  let field-name = get-type-name(#"field", field, extra-prefix: extra-prefix);
+  let repo = g-irepository-get-default();
+  let namespace = g-base-info-get-namespace(field);
+  let prefix = g-irepository-get-c-prefix(repo, namespace);
+  let field-name = dylanize(lowercase(concatenate(prefix, container-name, "-", g-base-info-get-name(field))));
   let field-type = map-to-dylan-type(context, g-field-info-get-type(field));
   let writable? = field-is-writable?(field);
   let readable? = field-is-readable?(field);
