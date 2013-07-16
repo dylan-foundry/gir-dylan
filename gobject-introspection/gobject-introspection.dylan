@@ -30,6 +30,10 @@ define C-pointer-type <gpointer*> => <gpointer>;
 define C-pointer-type <gchar**> => <C-string>;
 define C-pointer-type <guint8*> => <guint8>;
 
+/* This is required on older versions of glib. */
+define C-function g-type-init
+  c-name: "g_type_init";
+end;
 
 define C-struct <_GList>
   slot _GList$data :: <C-void*>;

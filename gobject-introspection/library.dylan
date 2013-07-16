@@ -13,6 +13,7 @@ define module gobject-introspection
   use common-dylan;
   use c-ffi;
   export
+    g-type-init,
     $G-INVOKE-ERROR-ARGUMENT-MISMATCH,
     $G-INVOKE-ERROR-FAILED,
     $G-INVOKE-ERROR-SYMBOL-NOT-FOUND,

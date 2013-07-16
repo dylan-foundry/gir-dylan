@@ -26,6 +26,8 @@ define function parse-args
 end;
 
 define function main (arguments :: <sequence>)
+  // Older versions of glib require this.
+  g-type-init();
   let parser = parse-args(arguments);
   let namespaces = positional-options(parser);
   let version = as(<C-string>, get-option-value(parser, "version") | null-pointer(<C-string>));
