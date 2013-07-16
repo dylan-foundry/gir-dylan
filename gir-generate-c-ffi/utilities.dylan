@@ -114,30 +114,56 @@ define function map-array-to-dylan-type (context, typeinfo) => (str :: <string>)
   end if
 end function map-array-to-dylan-type;
 
-define function map-to-dylan-type (context, typeinfo) => (str :: <string>)
+define function map-to-dylan-type
+    (context, typeinfo, #key direction = "input")
+ => (str :: <string>)
+  // Some output parameters are not marked as pointers even if they are
+  let is-pointer? = g-type-info-is-pointer(typeinfo) | direction ~= "input";
   select (g-type-info-get-tag(typeinfo))
-    $GI-TYPE-TAG-VOID => if (g-type-info-is-pointer(typeinfo)) "<C-void*>" else "XXX" end if;
-    $GI-TYPE-TAG-BOOLEAN => "<C-boolean>";
-    $GI-TYPE-TAG-INT8 => "<C-signed-char>";
-    $GI-TYPE-TAG-UINT8 => "<C-unsigned-char>";
-    $GI-TYPE-TAG-INT16 => "<C-signed-short>";
-    $GI-TYPE-TAG-UINT16 => "<C-unsigned-short>";
-    $GI-TYPE-TAG-INT32 => "<C-signed-int>";
-    $GI-TYPE-TAG-UINT32 => "<C-unsigned-int>";
-    $GI-TYPE-TAG-INT64 => "<C-signed-long>";
-    $GI-TYPE-TAG-UINT64 => "<C-unsigned-long>";
-    $GI-TYPE-TAG-FLOAT => "<C-float>";
-    $GI-TYPE-TAG-DOUBLE => "<C-double>";
-    $GI-TYPE-TAG-GTYPE => "<C-long>";
-    $GI-TYPE-TAG-UTF8 => "<C-string>";
-    $GI-TYPE-TAG-FILENAME => "<C-string>";
-    $GI-TYPE-TAG-ARRAY => map-array-to-dylan-type(context, typeinfo);
-    $GI-TYPE-TAG-INTERFACE => map-interface-to-dylan-type(context, typeinfo);
-    $GI-TYPE-TAG-GLIST => "<GList>";
-    $GI-TYPE-TAG-GSLIST => "<GSList>";
-    $GI-TYPE-TAG-GHASH => "<GHashTable>";
-    $GI-TYPE-TAG-ERROR => "<GError>";
-    $GI-TYPE-TAG-UNICHAR => "<C-unsigned-int>";
+    $GI-TYPE-TAG-VOID
+      => if (is-pointer?) "<C-void*>" else "XXX" end if;
+    $GI-TYPE-TAG-BOOLEAN
+      => if (is-pointer?)"<C-int*>" else "<C-boolean>" end if;
+    $GI-TYPE-TAG-INT8
+      => if (is-pointer?) "<C-signed-char*>" else "<C-signed-char>" end if;
+    $GI-TYPE-TAG-UINT8
+      => if (is-pointer?) "<C-unsigned-char*>" else "<C-unsigned-char>" end if;
+    $GI-TYPE-TAG-INT16
+      => if (is-pointer?) "<C-signed-short*>" else "<C-signed-short>" end if;
+    $GI-TYPE-TAG-UINT16
+      => if (is-pointer?) "<C-unsigned-short*>" else "<C-unsigned-short>" end if;
+    $GI-TYPE-TAG-INT32
+      => if (is-pointer?) "<C-signed-int*>" else "<C-signed-int>" end if;
+    $GI-TYPE-TAG-UINT32
+      => if (is-pointer?) "<C-unsigned-int*>" else "<C-unsigned-int>" end if;
+    $GI-TYPE-TAG-INT64
+      => if (is-pointer?) "<C-signed-long*>" else "<C-signed-long>" end if;
+    $GI-TYPE-TAG-UINT64
+      => if (is-pointer?) "<C-unsigned-long*>" else "<C-unsigned-long>" end if;
+    $GI-TYPE-TAG-FLOAT
+      => if (is-pointer?) "<C-float*>" else "<C-float>" end if;
+    $GI-TYPE-TAG-DOUBLE
+      => if (is-pointer?) "<C-double*>" else "<C-double>" end if;
+    $GI-TYPE-TAG-GTYPE
+      => if (is-pointer?) "<C-long*>" else "<C-long>" end if;
+    $GI-TYPE-TAG-UTF8
+      => "<C-string>";
+    $GI-TYPE-TAG-FILENAME
+      => "<C-string>";
+    $GI-TYPE-TAG-ARRAY
+      => map-array-to-dylan-type(context, typeinfo);
+    $GI-TYPE-TAG-INTERFACE
+      => map-interface-to-dylan-type(context, typeinfo);
+    $GI-TYPE-TAG-GLIST
+      => "<GList>";
+    $GI-TYPE-TAG-GSLIST
+      => "<GSList>";
+    $GI-TYPE-TAG-GHASH
+      => "<GHashTable>";
+    $GI-TYPE-TAG-ERROR
+      => "<GError>";
+    $GI-TYPE-TAG-UNICHAR
+      => "<C-unsigned-int>";
   end select
 end function;
 
