@@ -298,24 +298,23 @@ define method write-c-ffi (context, interface-info, type == $GI-INFO-TYPE-INTERF
   let dylan-name = get-type-name(#"type", interface-info);
   let dylan-pointer-name = get-type-name(#"type-pointer", interface-info);
   if (~binding-already-exported?(context, dylan-pointer-name))
+    add-exported-binding(context, dylan-pointer-name);
+
     let num-prerequisites = g-interface-info-get-n-prerequisites(interface-info);
     format(context.output-stream, "// Interface\n");
+    let prerequisites-name = #[];
     if (num-prerequisites = 0)
-      format(context.output-stream, "define C-struct %s\n", dylan-name);
-      format(context.output-stream, "  pointer-type-name: %s;\n", dylan-pointer-name);
-      format(context.output-stream, "end C-struct;\n\n");
+      prerequisites-name := add!(prerequisites-name, "<C-void*>");
     else
-      let prerequisites-name = #[];
       for (i from 0 below num-prerequisites)
         let prerequisite = g-interface-info-get-prerequisite(interface-info, i);
-        let prerequisite-dylan-name = get-type-name(#"type", prerequisite);
+        let prerequisite-dylan-name = get-type-name(#"type-pointer", prerequisite);
         prerequisites-name := add!(prerequisites-name, prerequisite-dylan-name);
       end for;
-      let joined-names = join(prerequisites-name, ", ");
-      format(context.output-stream, "define C-subtype %s (%s)\n", dylan-name, joined-names);
-      format(context.output-stream, "  pointer-type-name: %s;\n", dylan-pointer-name);
-      format(context.output-stream, "end C-subtype;\n\n");
     end;
+    let joined-names = join(prerequisites-name, ", ");
+    format(context.output-stream, "define open C-subtype %s (%s)\n", dylan-pointer-name, joined-names);
+    format(context.output-stream, "end C-subtype;\n\n");
 
     let num-methods = g-interface-info-get-n-methods(interface-info);
     for (i from 0 below num-methods)
@@ -334,14 +333,12 @@ define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
     add-exported-binding(context, dylan-pointer-name);
 
     let parent-info = g-object-info-get-parent(object-info);
-    let c-definer = "subtype";
     if (null-pointer?(parent-info))
       // This is the root object
-      format(context.output-stream, "define C-struct %s\n", dylan-name);
-      c-definer := "struct";
+      format(context.output-stream, "define open C-subtype %s (<C-void*>)\n", dylan-pointer-name);
     else
-      let parent-dylan-name = get-type-name(#"type", parent-info);
-      format(context.output-stream, "define C-subtype %s (%s)\n", dylan-name, parent-dylan-name);
+      let parent-dylan-name = get-type-name(#"type-pointer", parent-info);
+      format(context.output-stream, "define open C-subtype %s (%s)\n", dylan-pointer-name, parent-dylan-name);
       g-base-info-unref(parent-info);
     end if;
 
@@ -350,8 +347,7 @@ define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
       let field = g-object-info-get-field(object-info, i);
       write-c-ffi-field(context, field, name);
     end for;
-    format(context.output-stream, "  pointer-type-name: %s;\n", dylan-pointer-name);
-    format(context.output-stream, "end C-%s;\n\n", c-definer);
+    format(context.output-stream, "end C-subtype;\n\n");
     let num-methods = g-object-info-get-n-methods(object-info);
     for (i from 0 below num-methods)
       let function-info = g-object-info-get-method(object-info, i);
