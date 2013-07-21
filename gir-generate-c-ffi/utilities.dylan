@@ -29,6 +29,10 @@ define method get-type-name
     add!(buffer, if (non-underline & char == '_') '-' else char end if);
   end for;
 
+  if ((category == #"type-pointer-pointer") |
+      (category == #"enum-pointer"))
+    add!(buffer, '*');
+  end if;
   add!(buffer, '>');
 
   as(<byte-string>, buffer);
@@ -54,7 +58,9 @@ define function direction-to-string (direction) => (dir :: <string>)
   end select;
 end function;
 
-define function map-interface-to-dylan-type (context, type-info) => (str :: <string>)
+define function map-interface-to-dylan-type
+    (context, type-info, #key direction = "input")
+ => (str :: <string>)
   let interface-info = g-type-info-get-interface(type-info);
   let type-tag = g-base-info-get-type(interface-info);
   case (type-tag = $GI-INFO-TYPE-CALLBACK)
@@ -70,10 +76,18 @@ define function map-interface-to-dylan-type (context, type-info) => (str :: <str
             end if;
        (type-tag = $GI-INFO-TYPE-ENUM |
         type-tag = $GI-INFO-TYPE-FLAGS)
-         => get-type-name(#"enum", interface-info);
+         => if (direction ~= "input")
+              get-type-name(#"enum-pointer", interface-info);
+            else
+              get-type-name(#"enum", interface-info);
+            end if;
        (type-tag = $GI-INFO-TYPE-INTERFACE |
         type-tag = $GI-INFO-TYPE-OBJECT)
-         => get-type-name(#"type-pointer", interface-info);
+       => if (direction ~= "input")
+            get-type-name(#"type-pointer-pointer", interface-info);
+          else
+            get-type-name(#"type-pointer", interface-info);
+          end if;
        otherwise
          => "<object> /* <C-XXX-interface> */";
   end case
@@ -129,7 +143,15 @@ define function map-to-dylan-type
   let is-pointer? = g-type-info-is-pointer(type-info) | direction ~= "input";
   select (g-type-info-get-tag(type-info))
     $GI-TYPE-TAG-VOID
-      => if (is-pointer?) "<C-void*>" else "XXX" end if;
+      => if (is-pointer?)
+           if (direction ~= "input")
+             "<C-void**>";
+           else
+             "<C-void*>";
+           end if;
+         else
+           "XXX"
+         end if;
     $GI-TYPE-TAG-BOOLEAN
       => if (is-pointer?)"<C-int*>" else "<C-boolean>" end if;
     $GI-TYPE-TAG-INT8
@@ -161,7 +183,7 @@ define function map-to-dylan-type
     $GI-TYPE-TAG-ARRAY
       => map-array-to-dylan-type(context, type-info);
     $GI-TYPE-TAG-INTERFACE
-      => map-interface-to-dylan-type(context, type-info);
+      => map-interface-to-dylan-type(context, type-info, direction: direction);
     $GI-TYPE-TAG-GLIST
       => "<GList>";
     $GI-TYPE-TAG-GSLIST
@@ -171,7 +193,7 @@ define function map-to-dylan-type
     $GI-TYPE-TAG-ERROR
       => "<GError>";
     $GI-TYPE-TAG-UNICHAR
-      => "<C-unsigned-int>";
+      => if (is-pointer?) "<C-unsigned-int*>" else "<C-unsigned-int>" end if;
   end select
 end function;
 
