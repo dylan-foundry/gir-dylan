@@ -92,6 +92,8 @@ define function generate-dylan-file
       end block;
     end if;
 
+    format(stream, "\ndefine C-pointer-type <C-void**> => <C-void*>;\n\n");
+
     let context = make(<context>, stream: stream);
     let count = g-irepository-get-n-infos(repo, namespace);
     for (i from 0 below count)
@@ -274,9 +276,14 @@ define method write-c-ffi (context, enum-info, type == $GI-INFO-TYPE-ENUM)
   let value-names = write-c-ffi-values(context, enum-info);
   let dylan-enum-name = get-type-name(#"enum", enum-info);
   if (~binding-already-exported?(context, dylan-enum-name))
+    let dylan-enum-pointer-name = get-type-name(#"enum-pointer", enum-info);
     add-exported-binding(context, dylan-enum-name);
+    add-exported-binding(context, dylan-enum-pointer-name);
     // We use <C-int> rather than one-of because one-of isn't a C-FFI designator class
-    format(context.output-stream, "define constant %s = <C-int>;\n\n", dylan-enum-name);
+    format(context.output-stream, "define constant %s = <C-int>;\n", dylan-enum-name);
+    format(context.output-stream, "define C-pointer-type %s => %s;\n\n",
+           dylan-enum-pointer-name,
+           dylan-enum-name);
   end if;
 end method;
 
@@ -284,8 +291,13 @@ define method write-c-ffi (context, flags-info, type == $GI-INFO-TYPE-FLAGS)
  => ()
   write-c-ffi-values(context, flags-info);
   let dylan-flags-name = get-type-name(#"enum", flags-info);
+  let dylan-flags-pointer-name = get-type-name(#"enum-pointer", flags-info);
   add-exported-binding(context, dylan-flags-name);
-  format(context.output-stream, "define constant %s = <C-int>;\n\n", dylan-flags-name);
+  add-exported-binding(context, dylan-flags-pointer-name);
+  format(context.output-stream, "define constant %s = <C-int>;\n", dylan-flags-name);
+  format(context.output-stream, "define C-pointer-type %s => %s;\n\n",
+         dylan-flags-pointer-name,
+         dylan-flags-name);
 end method;
 
 define method write-c-ffi (context, function-info, type == $GI-INFO-TYPE-FUNCTION)
@@ -315,6 +327,11 @@ define method write-c-ffi (context, interface-info, type == $GI-INFO-TYPE-INTERF
     let joined-names = join(prerequisites-name, ", ");
     format(context.output-stream, "define open C-subtype %s (%s)\n", dylan-pointer-name, joined-names);
     format(context.output-stream, "end C-subtype;\n\n");
+    let dylan-pointer-pointer-name = get-type-name(#"type-pointer-pointer", interface-info);
+    add-exported-binding(context, dylan-pointer-pointer-name);
+    format(context.output-stream, "define C-pointer-type %s => %s;\n\n",
+           dylan-pointer-pointer-name,
+           dylan-pointer-name);
 
     let num-methods = g-interface-info-get-n-methods(interface-info);
     for (i from 0 below num-methods)
@@ -348,6 +365,11 @@ define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
       write-c-ffi-field(context, field, name);
     end for;
     format(context.output-stream, "end C-subtype;\n\n");
+    let dylan-pointer-pointer-name = get-type-name(#"type-pointer-pointer", object-info);
+    add-exported-binding(context, dylan-pointer-pointer-name);
+    format(context.output-stream, "define C-pointer-type %s => %s;\n\n",
+           dylan-pointer-pointer-name,
+           dylan-pointer-name);
     let num-methods = g-object-info-get-n-methods(object-info);
     for (i from 0 below num-methods)
       let function-info = g-object-info-get-method(object-info, i);
