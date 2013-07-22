@@ -4,10 +4,12 @@ copyright: See LICENSE file in this distribution.
 
 define library gobject-introspection-test-suite-app
   use testworks;
+  use gobject-introspection;
   use gobject-introspection-test-suite;
 end library;
 
 define module gobject-introspection-test-suite-app
   use testworks;
+  use gobject-introspection;
   use gobject-introspection-test-suite;
 end module;
