@@ -503,7 +503,7 @@ define function write-c-ffi-values (context, info) => (value-names :: <sequence>
       add-exported-binding(context, dylan-name);
       value-names := add!(value-names, dylan-name);
       let integer-value = g-value-info-get-value(value);
-      format(context.output-stream, "define constant %s :: <integer> = %d;\n", dylan-name, integer-value);
+      format(context.output-stream, "define constant %s = %d;\n", dylan-name, integer-value);
     end if;
     g-base-info-unref(value);
   end for;
