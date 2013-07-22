@@ -3,7 +3,6 @@ all: build
 .PHONY: build test
 
 build:
-	dylan-compiler -build gobject-introspection
 	dylan-compiler -build gir-generate-c-ffi
 
 test:
