@@ -133,6 +133,9 @@ define function map-array-to-dylan-type (context, type-info) => (str :: <string>
   elseif (array-type = $GI-ARRAY-TYPE-BYTE-ARRAY)
     // Not sure about this
     "<GByteArray>";
+  else
+    // Unknown ...
+    "<C-void*>";
   end if
 end function map-array-to-dylan-type;
 
