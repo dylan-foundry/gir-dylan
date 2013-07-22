@@ -370,6 +370,28 @@ define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
     format(context.output-stream, "define C-pointer-type %s => %s;\n\n",
            dylan-pointer-pointer-name,
            dylan-pointer-name);
+    let num-properties = g-object-info-get-n-properties(object-info);
+    for (i from 0 below num-properties)
+      let property-info = g-object-info-get-property(object-info, i);
+      let property-flags = g-property-info-get-flags(property-info);
+      let property-name = dylanize(g-base-info-get-name(property-info));
+      let property-type = map-to-dylan-type(context, g-property-info-get-type(property-info));
+      if (logand(property-flags, $G-PARAM-READABLE) ~= 0)
+        format(context.output-stream, "define property-getter %s :: %s on %s end;\n",
+               property-name,
+               property-type,
+               dylan-pointer-name);
+        add-exported-binding(context, concatenate("@", property-name));
+      end if;
+      if (logand(property-flags, $G-PARAM-WRITABLE) ~= 0)
+        format(context.output-stream, "define property-setter %s :: %s on %s end;\n",
+               property-name,
+               property-type,
+               dylan-pointer-name);
+        add-exported-binding(context, concatenate("@", property-name, "-setter"));
+      end if;
+      g-base-info-unref(property-info);
+    end for;
     let num-methods = g-object-info-get-n-methods(object-info);
     for (i from 0 below num-methods)
       let function-info = g-object-info-get-method(object-info, i);
