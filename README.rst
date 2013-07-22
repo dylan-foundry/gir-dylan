@@ -5,7 +5,10 @@ These are Dylan bindings for the `gobject-introspection`_ library
 (`reference documentation`_).
 
 To build them, you will need to build and install the gobject-introspection
-library first. You will also need OpenDylan 2012.1 or later.
+library first. On Ubuntu, this can be done by installing the
+libgirepository1.0-dev package.
+
+You will also need OpenDylan 2012.1 or later.
 
 This project also contains ``gir-generate-c-ffi`` which takes the
 gobject-introspection metadata and generates the appropriate `C-FFI`_
