@@ -1,5 +1,5 @@
 library: gir-generate-c-ffi
-target-type: exe
+target-type: executable
 files: library
        main
        generate-c-ffi
