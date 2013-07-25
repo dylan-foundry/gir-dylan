@@ -250,7 +250,8 @@ define function dependency-name-and-version
 end function dependency-name-and-version;
 
 define function dependencies-for-namespace
-    (namespace :: <string>)
+    (namespace :: <string>,
+     #key recursive = #f)
  => (dependencies :: <sequence>)
   let repo = g-irepository-get-default();
 
@@ -263,6 +264,10 @@ define function dependencies-for-namespace
         if (null-pointer?(dependency)) exit() end if;
         let (name, version) = dependency-name-and-version(dependency);
         dependencies := add(dependencies, pair(name, version));
+        if (recursive & load-typelib(name, version))
+          let additional-dependencies = dependencies-for-namespace(name, recursive: #t);
+          dependencies := union(dependencies, additional-dependencies, test: \=);
+        end if;
       end for;
     end block;
   end if;

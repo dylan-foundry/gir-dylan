@@ -43,8 +43,10 @@ define function main (arguments :: <sequence>)
     if (load-typelib(namespace, version))
       generate-c-ffi(namespace, version);
       if (dependencies?)
-        let dependencies = dependencies-for-namespace(namespace);
+        let dependencies = dependencies-for-namespace(namespace, recursive: #t);
         for (dependency in dependencies)
+          format(*standard-error*, "%s\n", dependency);
+            force-output(*standard-error*);
           let name = head(dependency);
           let version = tail(dependency);
           if (load-typelib(name, version))

@@ -78,7 +78,7 @@ define function generate-dylan-file
     format(stream, "copyright: See LICENSE file in this distribution.\n\n");
     let repo = g-irepository-get-default();
 
-    let dependencies = dependencies-for-namespace(namespace);
+    let dependencies = dependencies-for-namespace(namespace, recursive: #t);
 
     format(stream, "\ndefine C-pointer-type <C-void**> => <C-void*>;\n\n");
 
