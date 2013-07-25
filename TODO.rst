@@ -27,13 +27,4 @@ gir-generate-c-ffi
 * Command line parsing issues (marked with XXX in main.dylan)
 * Error handling in the event that they give an invalid namespace
   or version.
-* Support all of the types of things that can be bound.
-* Support the right typeinfo translation for function args. Some
-  are still marked with XXX to indicate that they aren't correct.
-* Figure out how to get the prefix in the right forms for methods,
-  structs, etc.
-* Generate ``library.dylan``.
-* How to get the value for a constant? Do we need a bit of custom
-  C?
 * Fields might be arrays and need to be mapped to array slots.
-* Everything else.
