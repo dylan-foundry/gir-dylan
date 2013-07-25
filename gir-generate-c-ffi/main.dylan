@@ -12,6 +12,11 @@ define function parse-args
                   names: #("version"),
                   default: #f,
                   help: "Version of the library to generate bindings for. Defaults to most recent."));
+  add-option(parser,
+             make(<flag-option>,
+                  names: #("dependencies"),
+                  default: #f,
+                  help: "Generate the bindings for the namespace's dependencies."));
   // XXX: Should add a repeated-option-parameter for the search path.
   block ()
     parse-command-line(parser, args,
@@ -31,11 +36,24 @@ define function main (arguments :: <sequence>)
   let parser = parse-args(arguments);
   let namespaces = positional-options(parser);
   let version = as(<C-string>, get-option-value(parser, "version") | null-pointer(<C-string>));
+  let dependencies? = get-option-value(parser, "dependencies");
   // XXX: Fail nicely if no namespaces.
   // XXX: Fail if they specify a version and more than one namespace.
   for (namespace in namespaces)
     if (load-typelib(namespace, version))
       generate-c-ffi(namespace, version);
+      if (dependencies?)
+        let dependencies = dependencies-for-namespace(namespace, recursive: #t);
+        for (dependency in dependencies)
+          format(*standard-error*, "%s\n", dependency);
+            force-output(*standard-error*);
+          let name = head(dependency);
+          let version = tail(dependency);
+          if (load-typelib(name, version))
+            generate-c-ffi(name, version);
+          end if;
+        end for;
+      end if;
     end if;
   end for;
 end function;

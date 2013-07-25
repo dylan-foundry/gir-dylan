@@ -241,3 +241,35 @@ define function convert-gi-argument (argument, type) => (value)
     $GI-TYPE-TAG-UNICHAR => "XXX>";
   end select
 end function convert-gi-argument;
+
+define function dependency-name-and-version
+    (dependency :: <string>)
+ => (name :: <string>, version :: <string>)
+  let parts = split(dependency, "-");
+  values(first(parts), second(parts))
+end function dependency-name-and-version;
+
+define function dependencies-for-namespace
+    (namespace :: <string>,
+     #key recursive = #f)
+ => (dependencies :: <sequence>)
+  let repo = g-irepository-get-default();
+
+  let dependencies-c-array = g-irepository-get-dependencies(repo, namespace);
+  let dependencies = #[];
+  if (~null-pointer?(dependencies-c-array))
+    block (exit)
+      for (i from 0)
+        let dependency = element(dependencies-c-array, i);
+        if (null-pointer?(dependency)) exit() end if;
+        let (name, version) = dependency-name-and-version(dependency);
+        dependencies := add(dependencies, pair(name, version));
+        if (recursive & load-typelib(name, version))
+          let additional-dependencies = dependencies-for-namespace(name, recursive: #t);
+          dependencies := union(dependencies, additional-dependencies, test: \=);
+        end if;
+      end for;
+    end block;
+  end if;
+  dependencies
+end function dependencies-for-namespace;

@@ -78,19 +78,7 @@ define function generate-dylan-file
     format(stream, "copyright: See LICENSE file in this distribution.\n\n");
     let repo = g-irepository-get-default();
 
-    let dependencies-c-array = g-irepository-get-dependencies(repo, namespace);
-    let dependencies = #[];
-    if (~null-pointer?(dependencies-c-array))
-      block (exit)
-        for (i from 0)
-          let dependency = element(dependencies-c-array, i);
-          if (null-pointer?(dependency)) exit() end if;
-          dependencies := add(dependencies, dependency);
-          format(*standard-error*, "Detected dependency: %s\n", dependency);
-          force-output(*standard-error*);
-        end for;
-      end block;
-    end if;
+    let dependencies = dependencies-for-namespace(namespace, recursive: #t);
 
     format(stream, "\ndefine C-pointer-type <C-void**> => <C-void*>;\n\n");
 
@@ -109,16 +97,9 @@ define function generate-dylan-file
 end function;
 
 define function library-name-from-dependency
-    (dependency :: <string>)
+    (dependency :: <pair>)
  => (library-name :: <string>)
-  let library-name = make(<stretchy-vector>);
-  // The library name is the first part of the string, before the '-'
-  block (exit)
-    for (ch in dependency)
-      if (ch = '-') exit() end if;
-      add!(library-name, ch);
-    end for;
-  end block;
+  let library-name = head(dependency);
   lowercase(as(<byte-string>, library-name))
 end function library-name-from-dependency;
 
@@ -140,6 +121,7 @@ define function generate-library-file
     format(stream, "  use dylan;\n");
     format(stream, "  use common-dylan;\n");
     format(stream, "  use c-ffi;\n");
+    format(stream, "  use gobject-glue;\n");
     for (dependency in dependencies)
       format(stream, "  use %s;\n", library-name-from-dependency(dependency));
     end for;
@@ -151,6 +133,7 @@ define function generate-library-file
     format(stream, "  use dylan;\n");
     format(stream, "  use common-dylan;\n");
     format(stream, "  use c-ffi;\n");
+    format(stream, "  use gobject-glue;\n");
     for (dependency in dependencies)
       format(stream, "  use %s;\n", library-name-from-dependency(dependency));
     end for;
