@@ -2,6 +2,27 @@ module: gobject-glue
 copyright: See LICENSE file in this distribution.
 
 define constant <gsize> = <C-unsigned-long>;
+define constant <guint> = <C-unsigned-int>;
+define constant <gpointer> = <C-void*>;
+define constant <gchar> = <C-signed-char>;
+define constant <guchar> = <C-unsigned-char>;
+define constant <gint> = <C-signed-int>;
+define constant <glong> = <C-signed-long>;
+define constant <gulong> = <C-unsigned-long>;
+define constant <gint64> = <C-signed-long>;
+define constant <guint64> = <C-unsigned-long>;
+define constant <gfloat> = <C-float>;
+define constant <gdouble> = <C-double>;
+define constant <guint32> = <C-unsigned-int>;
+define constant <gint32> = <C-signed-int>;
+define constant <gint8> = <C-signed-char>;
+define constant <guint8> = <C-unsigned-char>;
+define constant <gint16> = <C-signed-short>;
+define constant <guint16> = <C-unsigned-short>;
+define constant <gshort> = <C-signed-short>;
+define constant <gushort> = <C-unsigned-short>;
+define constant <gssize> = <C-signed-long>;
+define constant <GQuark> = <guint32>;
 define constant <GType> = <gsize>;
 
 define constant $G-TYPE-INVALID = 0;
@@ -46,6 +67,14 @@ define C-struct <_GData>
   pointer-type-name: <GData>;
 end C-struct;
 
+define C-struct <_GString>
+  pointer-type-name: <GString>;
+end C-struct;
+
+define C-struct <_GClosure>
+  pointer-type-name: <GClosure>;
+end C-struct;
+
 define open C-subtype <GObject> (<C-void*>)
   constant slot gobject-g-type-instance :: <GTypeInstance>;
   constant slot gobject-ref-count :: <C-unsigned-int>;
@@ -58,11 +87,32 @@ define C-function g-type-from-instance
   c-name: "g_type_from_instance";
 end;
 
+define C-function g-object-unref
+  input parameter self :: <GObject>;
+  c-name: "g_object_unref";
+end;
+
+define C-function g-object-ref-sink
+  input parameter self :: <GObject>;
+  result res :: <GObject>;
+  c-name: "g_object_ref_sink";
+end;
+
+define C-function g-value-type
+  input parameter instance :: <GValue>;
+  result type :: <GType>;
+  c-name: "g_value_type";
+end;
 define C-function g-value-init
   input parameter self :: <GValue>;
   input parameter g_type_ :: <C-long>;
   result res :: <GValue>;
   c-name: "g_value_init";
+end;
+define C-function g-value-peek-pointer
+  input parameter self :: <GValue>;
+  result res :: <C-void*>;
+  c-name: "g_value_peek_pointer";
 end;
 define C-function g-value-set-double
   input parameter self :: <GValue>;
@@ -93,6 +143,71 @@ define C-function g-value-set-string
   input parameter self :: <GValue>;
   input parameter v_string_ :: <C-string>;
   c-name: "g_value_set_string";
+end;
+define C-function g-value-get-char
+  input parameter self :: <GValue>;
+  result res :: <C-signed-char>;
+  c-name: "g_value_get_char";
+end;
+define C-function g-value-get-uchar
+  input parameter self :: <GValue>;
+  result res :: <C-unsigned-char>;
+  c-name: "g_value_get_uchar";
+end;
+define C-function g-value-get-boolean
+  input parameter self :: <GValue>;
+  result res :: <C-boolean>;
+  c-name: "g_value_get_boolean";
+end;
+define C-function g-value-get-int
+  input parameter self :: <GValue>;
+  result res :: <C-signed-int>;
+  c-name: "g_value_get_int";
+end;
+define C-function g-value-get-int64
+  input parameter self :: <GValue>;
+  result res :: <C-signed-long>;
+  c-name: "g_value_get_int64";
+end;
+define C-function g-value-get-uint
+  input parameter self :: <GValue>;
+  result res :: <C-unsigned-int>;
+  c-name: "g_value_get_uint";
+end;
+define C-function g-value-get-uint64
+  input parameter self :: <GValue>;
+  result res :: <C-unsigned-long>;
+  c-name: "g_value_get_uint64";
+end;
+define C-function g-value-get-long
+  input parameter self :: <GValue>;
+  result res :: <C-signed-long>;
+  c-name: "g_value_get_long";
+end;
+define C-function g-value-get-ulong
+  input parameter self :: <GValue>;
+  result res :: <C-unsigned-long>;
+  c-name: "g_value_get_ulong";
+end;
+define C-function g-value-get-float
+  input parameter self :: <GValue>;
+  result res :: <C-float>;
+  c-name: "g_value_get_float";
+end;
+define C-function g-value-get-double
+  input parameter self :: <GValue>;
+  result res :: <C-double>;
+  c-name: "g_value_get_double";
+end;
+define C-function g-value-get-string
+  input parameter self :: <GValue>;
+  result res :: <C-string>;
+  c-name: "g_value_get_string";
+end;
+define C-function g-value-get-pointer
+  input parameter self :: <GValue>;
+  result res :: <C-void*>;
+  c-name: "g_value_get_pointer";
 end;
 
 define method g-value-set-value (gvalue :: <GValue>, value :: <double-float>)
@@ -135,6 +250,35 @@ define C-function g-object-set-property
   c-name: "g_object_set_property";
 end;
 
+define C-function g-type-name
+  input parameter type_ :: <C-long>;
+  result res :: <C-string>;
+  c-name: "g_type_name";
+end;
+
+define C-function g-closure-new-simple
+  input parameter sizeof_closure_ :: <C-unsigned-int>;
+  input parameter data_ :: <C-void*>;
+  result res :: <GClosure>;
+  c-name: "g_closure_new_simple";
+end;
+
+define C-function g-closure-set-meta-marshal
+  input parameter self :: <GClosure>;
+  input parameter marshal_data_ :: <C-void*>;
+  input parameter meta_marshal_ :: <C-function-pointer>;
+  c-name: "g_closure_set_meta_marshal";
+end;
+
+define C-function g-signal-connect-closure
+  input parameter instance_ :: <C-void*>;
+  input parameter detailed_signal_ :: <C-string>;
+  input parameter closure_ :: <GClosure>;
+  input parameter after_ :: <C-boolean>;
+  result res :: <C-unsigned-long>;
+  c-name: "g_signal_connect_closure";
+end;
+
 define C-function gdk-threads-enter
   c-name: "gdk_threads_enter";
 end;
@@ -149,21 +293,216 @@ define macro with-gdk-lock
   { with-gdk-lock ?:body end }
  =>
   {  block()
-       *holding-gdk-lock* > 0 | gdk-threads-enter();
+       unless (*holding-gdk-lock* > 0) gdk-threads-enter() end;
        *holding-gdk-lock* := *holding-gdk-lock* + 1;
        ?body
      cleanup
        *holding-gdk-lock* := *holding-gdk-lock* - 1;
-       *holding-gdk-lock* > 0 | gdk-threads-leave();
+       unless (*holding-gdk-lock* > 0) gdk-threads-leave() end;
      end }
 end;
+
+
+define method make(type :: subclass(<GTypeInstance>), #rest args, 
+                   #key address, #all-keys)
+ => (result :: <GTypeInstance>)
+  if(address)
+    let instance = next-method(<GTypeInstance>, address: address);
+    if (~ null-pointer?(instance))
+      let g-type = g-type-from-instance(instance);
+      let dylan-type = find-gtype(g-type);
+      unless (dylan-type)
+        error("Unknown GType %= encountered. Re-run melange or implement dynamic class generation.",
+              as(<byte-string>, g-type-name(g-type)));
+      end;
+      let result = next-method(dylan-type, address: address);
+      g-object-ref-sink(result);
+      finalize-when-unreachable(result);
+      result;
+    else
+      next-method();
+    end
+  else
+    // possible route: convert #rest args into GParamSpec, call g_object_newv()
+    error("Can't create GTypeInstance on my own from %=", type.debug-name);
+  end if;
+end method make;
+
+define method finalize (instance :: <GTypeInstance>)
+ => ();
+  with-gdk-lock
+    g-object-unref(instance)
+  end;
+end;
+
+define function all-subclasses (x :: <class>)
+ => (subclasses :: <collection>)
+  // Visit each node of the class tree
+  let classes-to-visit = make(<deque>, size: 1, fill: x);
+  let subclasses = #[];
+  while (size(classes-to-visit) > 0)
+    let current-class = pop(classes-to-visit);
+    map(curry(push, classes-to-visit), current-class.direct-subclasses);
+    subclasses := add(subclasses, current-class);
+  end while;
+  subclasses
+end;
+
+define function find-gtype-by-name(name :: <string>)
+  block(return)
+    let dylan-name = as-uppercase(concatenate("<", name, ">"));
+    for(i in $all-gtype-instances)
+      if(as-uppercase(i.debug-name) = dylan-name)
+        return(i)
+      end if;
+//    finally
+//      error("Unknown GType %= encountered.", as(<byte-string>, name))
+    end for;
+  end block;
+end function find-gtype-by-name;
+
+define function find-gtype(g-type)
+ => (type :: false-or(<class>));
+  let dylan-type = element($gtype-table, g-type, default: #f);
+  unless(dylan-type)
+    let type-name = g-type-name(g-type);
+    dylan-type := find-gtype-by-name(type-name);
+    $gtype-table[g-type] := dylan-type;
+  end unless;
+  dylan-type
+end function find-gtype;
+
+define constant $all-gtype-instances = all-subclasses(<GTypeInstance>);
+
+// map GTK type IDs to Dylan classes
+define table $gtype-table = {
+                             $G-TYPE-CHAR         => <gchar>,
+                             $G-TYPE-UCHAR        => <guchar>,
+                             $G-TYPE-INT          => <gint>,
+                             $G-TYPE-UINT         => <guint>,
+                             $G-TYPE-LONG         => <glong>,
+                             $G-TYPE-ULONG        => <gulong>,
+                             $G-TYPE-INT64        => <gint64>,
+                             $G-TYPE-UINT64       => <guint64>,
+                             $G-TYPE-FLOAT        => <gfloat>,
+                             $G-TYPE-DOUBLE       => <gdouble>,
+                             $G-TYPE-STRING       => <GString>,
+                             $G-TYPE-POINTER      => <gpointer>
+                             };
+
+define function dylan-meta-marshaller (closure :: <GClosure>,
+                                       return-value :: <GValue>,
+                                       n-param-values :: <integer>,
+                                       param-values :: <GValue>,
+                                       invocation-hint :: <gpointer>,
+                                       marshal-data :: <gpointer>)
+  let values = #();
+  for(i from 0 below n-param-values)
+
+//    let address = integer-as-raw(param-values.raw-pointer-address.raw-as-integer + i * sizeof-gvalue());
+//    let value* = make(<GValue>, address: address);
+
+    let value = make-c-pointer(<GValue>,
+                               primitive-machine-word-add
+                                 (primitive-cast-pointer-as-raw
+                                   (primitive-unwrap-c-pointer(param-values)),
+                                  integer-as-raw
+                                    (i * sizeof-gvalue())),
+                               #[]);
+    values := pair(g-value-to-dylan(value), values);
+//    value*;
+  end for;
+  values := reverse!(values);
+  *holding-gdk-lock* := *holding-gdk-lock* + 1;
+  let res = apply(import-c-dylan-object(c-type-cast(<C-dylan-object>, marshal-data)), values);
+  *holding-gdk-lock* := *holding-gdk-lock* - 1;
+  if(return-value ~= null-pointer(<gvalue>))
+    select(g-value-type(return-value))
+      $G-TYPE-BOOLEAN => g-value-set-boolean(return-value, res);
+      $G-TYPE-NONE, $G-TYPE-INVALID => ;
+      otherwise =>
+        error("Unsupported GType in return from signal handler: %=.",
+              g-value-type(return-value));
+    end select;
+  end if;
+end;
+
+define C-callable-wrapper _dylan-meta-marshaller of dylan-meta-marshaller
+  parameter closure         :: <GClosure>;
+  parameter return-value    :: <GValue>;
+  parameter n-param-values  :: <guint>;
+  parameter param-values    :: <GValue>;
+  parameter invocation-hint :: <gpointer>;
+  parameter marshal-data    :: <gpointer>;
+  c-name: "foo";
+end;
+
+define C-function sizeof-gvalue
+  result size :: <C-int>;
+  c-name: "sizeof_gvalue";
+end;
+
+define C-function sizeof-gclosure
+  result size :: <C-int>;
+  c-name: "sizeof_gclosure";
+end;
+
+define function g-signal-connect(instance :: <GObject>,
+                                 signal :: <string>,
+                                 function :: <function>,
+                                 #key run-after? :: <boolean>)
+  register-c-dylan-object(function);
+  let closure = g-closure-new-simple(sizeof-gclosure(),
+                                     null-pointer(<gpointer>));
+  g-closure-set-meta-marshal
+    (closure, export-c-dylan-object(function), _dylan-meta-marshaller);
+  g-signal-connect-closure(instance,
+                           signal, 
+                           closure,
+                           run-after?);
+end function g-signal-connect;
+
+define function g-value-to-dylan (instance :: <GValue>)
+ => (dylan-instance);
+  let g-type = g-value-type(instance);
+  if(g-type ~= $G-TYPE-INVALID)
+    let dylan-type = find-gtype(g-type);
+    let address-thunk = method () pointer-address(g-value-peek-pointer(instance)) end;
+    if(dylan-type & subtype?(dylan-type, <GTypeInstance>))
+      make(dylan-type, address: address-thunk())
+    else
+      select(g-type)
+        $G-TYPE-NONE    => #f;
+        $G-TYPE-CHAR    => g-value-get-char(instance);
+        $G-TYPE-UCHAR   => g-value-get-uchar(instance);
+        $G-TYPE-BOOLEAN => (g-value-get-boolean(instance) = 1);
+        $G-TYPE-INT     => g-value-get-int(instance);
+        $G-TYPE-UINT    => g-value-get-uint(instance);
+        $G-TYPE-LONG    => g-value-get-long(instance);
+        $G-TYPE-ULONG   => g-value-get-ulong(instance);
+        $G-TYPE-INT64   => g-value-get-int64(instance);
+        $G-TYPE-UINT64  => g-value-get-uint64(instance);
+        $G-TYPE-ENUM    => error("Can't handle $G-TYPE-ENUM yet.");
+        $G-TYPE-FLAGS   => error("Can't handle $G-TYPE-FLAGS yet.");
+        $G-TYPE-FLOAT   => g-value-get-float(instance);
+        $G-TYPE-DOUBLE  => g-value-get-double(instance);
+        $G-TYPE-STRING  => g-value-get-string(instance);
+        $G-TYPE-POINTER => g-value-get-pointer(instance);
+        $G-TYPE-BOXED   => #f;
+        $G-TYPE-PARAM   => #f;
+        $G-TYPE-OBJECT  => #f;
+        otherwise       => error("Unknown Gtype %=", g-type);
+      end select;
+    end if;
+  end if;
+end function g-value-to-dylan;
 
 define macro property-getter-definer
   { define property-getter ?:name :: ?type:name on ?class:name end }
   => { define method "@" ## ?name (object :: ?class) => (res)
          with-stack-structure (foo :: <GValue>)
            g-object-get-property(object, ?"name", foo);
-//           g-value-to-dylan(foo);
+           g-value-to-dylan(foo);
          end;
        end;
   }
