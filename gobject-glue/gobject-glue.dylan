@@ -135,6 +135,29 @@ define C-function g-object-set-property
   c-name: "g_object_set_property";
 end;
 
+define C-function gdk-threads-enter
+  c-name: "gdk_threads_enter";
+end;
+
+define C-function gdk-threads-leave
+  c-name: "gdk_threads_leave";
+end;
+
+define thread variable *holding-gdk-lock* = 0;
+
+define macro with-gdk-lock
+  { with-gdk-lock ?:body end }
+ =>
+  {  block()
+       *holding-gdk-lock* > 0 | gdk-threads-enter();
+       *holding-gdk-lock* := *holding-gdk-lock* + 1;
+       ?body
+     cleanup
+       *holding-gdk-lock* := *holding-gdk-lock* - 1;
+       *holding-gdk-lock* > 0 | gdk-threads-leave();
+     end }
+end;
+
 define macro property-getter-definer
   { define property-getter ?:name :: ?type:name on ?class:name end }
   => { define method "@" ## ?name (object :: ?class) => (res)

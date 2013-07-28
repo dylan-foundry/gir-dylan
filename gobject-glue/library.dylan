@@ -13,6 +13,7 @@ define module gobject-glue
   use common-dylan;
   use c-ffi;
 
-  export property-setter-definer,
+  export \with-gdk-lock,
+    property-setter-definer,
     property-getter-definer;
 end module;
