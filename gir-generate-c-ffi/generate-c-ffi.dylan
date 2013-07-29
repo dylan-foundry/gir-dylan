@@ -187,12 +187,16 @@ define function  generate-jam-file
       lower-namespace := "gtk+";
     end if;
 
-    format(stream, "LINKLIBS += `pkg-config --libs %s-%s` ;\n",
-           lower-namespace,
-           version);
-    format(stream, "CCFLAGS += `pkg-config --cflags %s-%s` ;\n",
-           lower-namespace,
-           version);
+    let complete-name = select (lower-namespace by \=)
+                          "atk" => "atk";
+                          "cairo" => "cairo";
+                          "xlib" => "x11";
+                          "pango" => "pango";
+                          otherwise => concatenate(lower-namespace, "-", version);
+                        end select;
+
+    format(stream, "LINKLIBS += `pkg-config --libs %s` ;\n", complete-name);
+    format(stream, "CCFLAGS += `pkg-config --cflags %s` ;\n", complete-name);
   end with-open-file;
 end function generate-jam-file;
 
