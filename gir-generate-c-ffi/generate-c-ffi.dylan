@@ -357,7 +357,8 @@ define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
     for (i from 0 below num-properties)
       let property-info = g-object-info-get-property(object-info, i);
       let property-flags = g-property-info-get-flags(property-info);
-      let property-name = concatenate(lowercase(name), "-", dylanize(g-base-info-get-name(property-info)));
+      let property-name = concatenate(dylanize(name), "-",
+                                      dylanize(g-base-info-get-name(property-info)));
       let property-type = map-to-dylan-type(context, g-property-info-get-type(property-info));
       if (logand(property-flags, $G-PARAM-READABLE) ~= 0)
         format(context.output-stream, "define property-getter %s :: %s on %s end;\n",
@@ -444,7 +445,9 @@ define function write-c-ffi-field (context, field, container-name) => ()
   let repo = g-irepository-get-default();
   let namespace = g-base-info-get-namespace(field);
   let prefix = g-irepository-get-c-prefix(repo, namespace);
-  let field-name = dylanize(lowercase(concatenate(prefix, container-name, "-", g-base-info-get-name(field))));
+  let field-name = concatenate(dylanize(prefix), "-",
+                               dylanize(container-name), "-",
+                               dylanize(g-base-info-get-name(field)));
   let field-type = map-to-dylan-type(context, g-field-info-get-type(field));
   let writable? = field-is-writable?(field);
   let readable? = field-is-readable?(field);
