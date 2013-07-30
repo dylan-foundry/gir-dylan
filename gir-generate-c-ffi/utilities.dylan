@@ -38,16 +38,53 @@ define method get-type-name
   as(<byte-string>, buffer);
 end method get-type-name;
 
+/* This is borrowed from code in melange */
+define function hypenate-case-breaks (name :: <string>) => (result :: <string>)
+  if (empty?(name))
+    name
+  else
+    let buffer = make(<stretchy-vector>);
+    let old-status = #"neither";
+    for (char in name,
+         old-char = #f then char)
+      let status = if (~alphabetic?(char))
+                     #"neither";
+                   elseif (~uppercase?(char))
+                     #"lower";
+                   else
+                     #"upper"
+                   end if;
+      if (~old-char)
+        old-status := #"neither";
+      elseif (status == #"upper" & old-status == #"lower")
+        add!(buffer, old-char);
+        add!(buffer, '-');
+        old-status := #"neither";
+      elseif (status == #"lower" & old-status == #"upper")
+        if (alphanumeric?(buffer.last)) add!(buffer, '-') end if;
+        add!(buffer, old-char);
+        old-status := status;
+      else
+        add!(buffer, old-char);
+        old-status := status;
+      end if;
+    finally
+      add!(buffer, old-char);
+    end for;
+    as(<byte-string>, buffer)
+  end
+end function hypenate-case-breaks;
+
 /* Some of this is borrowed from code in melange */
 define function dylanize (name :: <string>) => (dylan-name :: <string>)
   let buffer = make(<stretchy-vector>);
 
   for (non-underline = #f then non-underline | char ~= '_',
-       char in name)
+       char in hypenate-case-breaks(name))
     add!(buffer, if (non-underline & char == '_') '-' else char end if);
   end for;
 
-  as(<byte-string>, buffer);
+  lowercase(as(<byte-string>, buffer))
 end function dylanize;
 
 define function direction-to-string (direction) => (dir :: <string>)
