@@ -496,6 +496,11 @@ define function write-c-ffi-function (context, function-info, container-name) =>
     if ((result-tag ~= $GI-TYPE-TAG-VOID) |
         (result-tag = $GI-TYPE-TAG-VOID & g-type-info-is-pointer(result-type)))
       let dylan-result-type = map-to-dylan-type(context, result-type);
+      // HACK: avoid the compiler creating a wrapper object around <GObject>,
+      // sometimes causing an infinite loop.
+      if (dylan-name = "g-object-ref-sink")
+        dylan-result-type := "<C-void*>";
+      end if;
       format(context.output-stream, "  result res :: %s;\n", dylan-result-type);
     end if;
     let symbol = g-function-info-get-symbol(function-info);
