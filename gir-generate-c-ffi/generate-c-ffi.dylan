@@ -6,9 +6,26 @@ copyright: See LICENSE file in this distribution.
 define class <context> (<object>)
   slot exported-bindings = #();
   constant slot exported-bindings-index = make(<set>);
+  slot properties = #();
   constant slot output-stream :: <stream>,
     required-init-keyword: stream:;
 end class;
+
+define class <property> (<object>)
+  constant slot property-name :: <string>,
+    init-keyword: name:;
+  constant slot property-type :: <string>,
+    init-keyword: type:;
+  constant slot property-class :: <string>,
+    init-keyword: class:;
+end class;
+
+define class <property-getter> (<property>) end;
+define class <property-setter> (<property>) end;
+
+define method \= (p1 :: <property>, p2 :: <property>) => (equal? :: <boolean>)
+  property-method-name(p1) = property-method-name(p2)
+end method \=;
 
 define function add-exported-binding
     (context :: <context>, binding-name :: <string>)
@@ -23,6 +40,12 @@ define function binding-already-exported?
   member?(as(<symbol>, lowercase(binding-name)),
           context.exported-bindings-index)
 end function binding-already-exported?;
+
+define function add-property
+    (context :: <context>, property :: <property>)
+ => ()
+  context.properties := add(context.properties, property);
+end function add-property;
 
 define function make-target-path (project-dir, #rest args) => (target)
   merge-locators(as(<file-locator>, apply(concatenate, args)),
@@ -44,14 +67,17 @@ define function generate-c-ffi
     (namespace :: <string>, version :: <string>)
  => ()
   let project-dir = generate-directory(namespace, version);
-  let (exported-bindings, dependencies)
+  let (context, dependencies)
     = generate-dylan-file(project-dir, namespace, version);
+  generate-properties-file(project-dir, namespace, context.properties);
   generate-library-file(project-dir,
                         namespace,
                         version,
-                        exported-bindings,
+                        context.exported-bindings,
+                        context.properties,
                         dependencies);
-  generate-lid-file(project-dir, namespace, version);
+  generate-lid-file(project-dir, namespace, version,
+                    properties?: ~empty?(context.properties));
   generate-jam-file(project-dir, namespace);
 end function;
 
@@ -68,7 +94,7 @@ define function generate-dylan-file
     (project-dir :: <directory-locator>,
      namespace :: <string>,
      version :: <string>)
- => (exported-bindings :: <sequence>, dependencies :: <sequence>)
+ => (context :: <context>, dependencies :: <sequence>)
   let project-name = make-project-name(namespace, version);
   let target-path = make-target-path(project-dir, project-name, ".dylan");
   with-open-file (stream = target-path, direction: #"output",
@@ -92,9 +118,45 @@ define function generate-dylan-file
         force-output(context.output-stream);
       end if;
     end for;
-    values(context.exported-bindings, dependencies)
+    values(context, dependencies)
   end with-open-file
 end function;
+
+define method write-property
+    (property :: <property-setter>, stream)
+ => ()
+  format(stream, "define property-setter %s :: %s on %s end;\n",
+         property.property-name,
+         property.property-type,
+         property.property-class);
+end method write-property;
+
+define method write-property
+    (property :: <property-getter>, stream)
+ => ()
+  format(stream, "define property-getter %s :: %s on %s end;\n",
+         property.property-name,
+         property.property-type,
+         property.property-class);
+end method write-property;
+
+define function generate-properties-file
+    (project-dir :: <directory-locator>,
+     namespace :: <string>,
+     properties :: <sequence>)
+ => ()
+  let target-path = make-target-path(project-dir,  "properties.dylan");
+  with-open-file (stream = target-path, direction: #"output",
+                  if-does-not-exist: #"create")
+    format(stream, "module: %s-properties\n", lowercase(namespace));
+    format(stream, "synopsis: generated bindings for the %s library\n", namespace);
+    format(stream, "copyright: See LICENSE file in this distribution.\n\n");
+
+    for (property in properties)
+      write-property(property, stream);
+    end for;
+  end with-open-file;
+end function generate-properties-file;
 
 define function library-name-from-dependency
     (dependency :: <pair>)
@@ -103,11 +165,24 @@ define function library-name-from-dependency
   lowercase(as(<byte-string>, library-name))
 end function library-name-from-dependency;
 
+define method property-method-name
+    (property :: <property-setter>)
+ => (name :: <string>)
+  concatenate("@", property.property-name, "-setter");
+end method property-method-name;
+
+define method property-method-name
+    (property :: <property-getter>)
+ => (name :: <string>)
+  concatenate("@", property.property-name);
+end method property-method-name;
+
 define function generate-library-file
     (project-dir :: <directory-locator>,
      namespace :: <string>,
      version :: <string>,
      exported-bindings :: <sequence>,
+     properties :: <sequence>,
      dependencies :: <sequence>)
  => ()
   let target-path = make-target-path(project-dir, "library.dylan");
@@ -127,8 +202,12 @@ define function generate-library-file
     end for;
     format(stream, "\n");
     format(stream, "  export %s;\n", lower-namespace);
+    if (~empty?(properties))
+      format(stream, "  export %s-properties;\n", lower-namespace);
+    end if;
     format(stream, "end library;\n");
     format(stream, "\n");
+
     format(stream, "define module %s\n", lower-namespace);
     format(stream, "  use dylan;\n");
     format(stream, "  use common-dylan;\n");
@@ -147,13 +226,31 @@ define function generate-library-file
       format(stream, ";\n");
     end for;
     format(stream, "end module;\n");
+
+    if (~empty?(properties))
+    format(stream, "\n");
+      format(stream, "define module %s-properties\n", lower-namespace);
+      format(stream, "  use %s;\n", lower-namespace);
+      format(stream, "  use gobject-glue;\n");
+      format(stream, "\n");
+      format(stream, "  export");
+      for (property in remove-duplicates(properties, test: \=),
+           first? = #t then #f)
+        if (~first?) format(stream, ","); end if;
+        format(stream, "\n    %s", property-method-name(property));
+      finally
+        format(stream, ";\n");
+      end for;
+      format(stream, "end module;\n");
+    end if;
   end with-open-file;
 end function;
 
 define function generate-lid-file
     (project-dir :: <directory-locator>,
      namespace :: <string>,
-     version :: <string>)
+     version :: <string>,
+     #key properties? :: <boolean> = #f)
  => ()
   let project-name = make-project-name(namespace, version, include-dylan: #t);
   let target-path = make-target-path(project-dir, project-name, ".lid");
@@ -165,6 +262,9 @@ define function generate-lid-file
     format(stream, "executable: %s\n", project-name);
     format(stream, "files: library\n");
     format(stream, "       %s\n", lower-namespace);
+    if (properties?)
+      format(stream, "       properties\n");
+    end if;
     format(stream, "jam-includes: %s.jam\n", project-name);
     // XXX: Need to output C-libraries here.
   end with-open-file;
@@ -361,22 +461,19 @@ define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
     for (i from 0 below num-properties)
       let property-info = g-object-info-get-property(object-info, i);
       let property-flags = g-property-info-get-flags(property-info);
-      let property-name = concatenate(dylanize(name), "-",
-                                      dylanize(g-base-info-get-name(property-info)));
+      let property-name = dylanize(g-base-info-get-name(property-info));
       let property-type = map-to-dylan-type(context, g-property-info-get-type(property-info));
       if (logand(property-flags, $G-PARAM-READABLE) ~= 0)
-        format(context.output-stream, "define property-getter %s :: %s on %s end;\n",
-               property-name,
-               property-type,
-               dylan-pointer-name);
-        add-exported-binding(context, concatenate("@", property-name));
+        add-property(context, make(<property-getter>,
+                                   name: property-name,
+                                   type: property-type,
+                                   class: dylan-pointer-name));
       end if;
       if (logand(property-flags, $G-PARAM-WRITABLE) ~= 0)
-        format(context.output-stream, "define property-setter %s :: %s on %s end;\n",
-               property-name,
-               property-type,
-               dylan-pointer-name);
-        add-exported-binding(context, concatenate("@", property-name, "-setter"));
+        add-property(context, make(<property-setter>,
+                                   name: property-name,
+                                   type: property-type,
+                                   class: dylan-pointer-name));
       end if;
       g-base-info-unref(property-info);
     end for;
