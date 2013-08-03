@@ -46,6 +46,7 @@ define constant $G-TYPE-BOXED = 72;
 define constant $G-TYPE-PARAM = 76;
 define constant $G-TYPE-OBJECT = 80;
 
+define C-pointer-type <GError*> => <GError>;
 
 define C-struct <_GValue>
   constant slot gvalue-g-type :: <C-long>;

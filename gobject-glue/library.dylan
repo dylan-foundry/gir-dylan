@@ -19,6 +19,7 @@ define module gobject-glue
   use dylan-extensions, import: { debug-name, integer-as-raw, raw-as-integer };
 
   export \with-gdk-lock,
+    <GError*>,
     g-signal-connect,
     g-value-nullify,
     g-value-set-value,
