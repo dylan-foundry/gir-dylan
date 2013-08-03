@@ -572,7 +572,8 @@ define function write-c-ffi-function (context, function-info, container-name) =>
   if (~binding-already-exported?(context, dylan-name))
     add-exported-binding(context, dylan-name);
     format(context.output-stream, "define C-function %s\n", dylan-name);
-    if (logand(g-function-info-get-flags(function-info), $GI-FUNCTION-IS-METHOD) ~= 0)
+    let function-flags = g-function-info-get-flags(function-info);
+    if (logand(function-flags, $GI-FUNCTION-IS-METHOD) ~= 0)
       format(context.output-stream, "  input parameter self :: %s;\n", container-name);
     end if;
     let num-args = g-callable-info-get-n-args(function-info);
@@ -588,6 +589,9 @@ define function write-c-ffi-function (context, function-info, container-name) =>
       end if;
       g-base-info-unref(arg);
     end for;
+    if (logand(function-flags, $GI-FUNCTION-THROWS) ~= 0)
+      format(context.output-stream, "  output parameter error_ :: <GError*>;\n");
+    end if;
     let result-type = g-callable-info-get-return-type(function-info);
     let result-tag = g-type-info-get-tag(result-type);
     if ((result-tag ~= $GI-TYPE-TAG-VOID) |
