@@ -106,7 +106,8 @@ define function generate-dylan-file
 
     let dependencies = dependencies-for-namespace(namespace, recursive: #t);
 
-    format(stream, "\ndefine C-pointer-type <C-void**> => <C-void*>;\n\n");
+    format(stream, "\ndefine C-pointer-type <C-void**> => <C-void*>;\n");
+    format(stream, "ignore(<C-void**>);\n\n");
 
     let context = make(<context>, stream: stream);
     let count = g-irepository-get-n-infos(repo, namespace);
