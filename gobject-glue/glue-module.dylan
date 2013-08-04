@@ -1,14 +1,4 @@
 module: dylan-user
-author: Francesco Ceccon
-copyright: See LICENSE file in this distribution.
-
-define library gobject-glue
-  use common-dylan;
-  use c-ffi;
-  use dylan;
-
-  export gobject-glue;
-end library;
 
 define module gobject-glue
   use common-dylan;
@@ -24,6 +14,7 @@ define module gobject-glue
     g-value-nullify,
     g-value-set-value,
     g-value-to-dylan,
+    g-value-to-dylan-helper,
     all-subclasses,
     property-setter-definer,
     property-getter-definer;

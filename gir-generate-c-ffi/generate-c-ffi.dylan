@@ -196,7 +196,6 @@ define function generate-library-file
     format(stream, "  use dylan;\n");
     format(stream, "  use common-dylan;\n");
     format(stream, "  use c-ffi;\n");
-    format(stream, "  use gobject-glue;\n");
     for (dependency in dependencies)
       format(stream, "  use %s;\n", library-name-from-dependency(dependency));
     end for;
