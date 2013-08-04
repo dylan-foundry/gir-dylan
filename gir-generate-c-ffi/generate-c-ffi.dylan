@@ -344,9 +344,21 @@ define method write-c-ffi (context, callback-info, type == $GI-INFO-TYPE-CALLBAC
   // We don't need to do anything for a callback. I think.
 end method;
 
-define method write-c-ffi (context, constant-info, type == $GI-INFO-TYPE-CONSTANT)
+// This constants are not prefixed by the library name by default.
+define constant $SPECIAL-CONSTANTS = #["BINARY_AGE", "INTERFACE_AGE",
+                                       "MAJOR_VERSION", "MINOR_VERSION",
+                                       "MICRO_VERSION"];
+
+Define method write-c-ffi (context, constant-info, type == $GI-INFO-TYPE-CONSTANT)
  => ()
-  let dylan-name = dylanize(concatenate("$", g-base-info-get-name(constant-info)));
+  let constant-name = g-base-info-get-name(constant-info);
+  if (member?(constant-name, $SPECIAL-CONSTANTS, test: \=))
+    let repo = g-irepository-get-default();
+    let namespace = g-base-info-get-namespace(constant-info);
+    let prefix = g-irepository-get-c-prefix(repo, namespace);
+    constant-name := concatenate(prefix, "-", constant-name);
+  end if;
+  let dylan-name = dylanize(concatenate("$", constant-name));
   if (~binding-already-exported?(context, dylan-name))
     add-exported-binding(context, dylan-name);
     let arg = make(<GIArgument>);
