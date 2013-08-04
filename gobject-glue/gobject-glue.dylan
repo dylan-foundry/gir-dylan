@@ -46,6 +46,7 @@ define constant $G-TYPE-BOXED = 72;
 define constant $G-TYPE-PARAM = 76;
 define constant $G-TYPE-OBJECT = 80;
 
+define C-pointer-type <GError*> => <GError>;
 
 define C-struct <_GValue>
   constant slot gvalue-g-type :: <C-long>;
@@ -351,7 +352,7 @@ end;
 define function find-gtype-by-name(name :: <string>)
   block(return)
     let dylan-name = as-uppercase(concatenate("<", name, ">"));
-    for(i in $all-gtype-instances)
+    for(i in all-gtype-instances())
       if(as-uppercase(i.debug-name) = dylan-name)
         return(i)
       end if;
@@ -372,7 +373,14 @@ define function find-gtype(g-type)
   dylan-type
 end function find-gtype;
 
-define constant $all-gtype-instances = all-subclasses(<GTypeInstance>);
+define variable $all-gtype-instances = #[];
+
+define function all-gtype-instances () => (instances :: <collection>)
+  if (empty?($all-gtype-instances))
+    $all-gtype-instances := all-subclasses(<GTypeInstance>);
+  end if;
+  $all-gtype-instances
+end function all-gtype-instances;
 
 // map GTK type IDs to Dylan classes
 define table $gtype-table = {
@@ -462,6 +470,12 @@ define function g-signal-connect(instance :: <GObject>,
                            run-after?);
 end function g-signal-connect;
 
+define open generic g-value-to-dylan-helper (id, address) => (dylan-instance);
+
+define method g-value-to-dylan-helper (type, address) => (dylan-instance)
+  error("Unknown type %=", type);
+end method g-value-to-dylan-helper;
+
 define function g-value-to-dylan (instance :: <GValue>)
  => (dylan-instance);
   let g-type = g-value-type(instance);
@@ -491,7 +505,8 @@ define function g-value-to-dylan (instance :: <GValue>)
         $G-TYPE-BOXED   => #f;
         $G-TYPE-PARAM   => #f;
         $G-TYPE-OBJECT  => #f;
-        otherwise       => error("Unknown Gtype %=", g-type);
+        g-type-from-name("GdkEvent") => g-value-to-dylan-helper(#"GdkEvent", address-thunk());
+        otherwise       => g-value-to-dylan-helper(g-type, address-thunk());
       end select;
     end if;
   end if;
