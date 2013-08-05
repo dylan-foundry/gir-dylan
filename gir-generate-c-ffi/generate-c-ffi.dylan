@@ -146,17 +146,19 @@ define function generate-properties-file
      namespace :: <string>,
      properties :: <sequence>)
  => ()
-  let target-path = make-target-path(project-dir,  "properties.dylan");
-  with-open-file (stream = target-path, direction: #"output",
-                  if-does-not-exist: #"create")
-    format(stream, "module: %s-properties\n", lowercase(namespace));
-    format(stream, "synopsis: generated bindings for the %s library\n", namespace);
-    format(stream, "copyright: See LICENSE file in this distribution.\n\n");
+  if (~empty?(properties))
+    let target-path = make-target-path(project-dir,  "properties.dylan");
+    with-open-file (stream = target-path, direction: #"output",
+                    if-does-not-exist: #"create")
+      format(stream, "module: %s-properties\n", lowercase(namespace));
+      format(stream, "synopsis: generated bindings for the %s library\n", namespace);
+      format(stream, "copyright: See LICENSE file in this distribution.\n\n");
 
-    for (property in properties)
-      write-property(property, stream);
-    end for;
-  end with-open-file;
+      for (property in properties)
+        write-property(property, stream);
+      end for;
+    end with-open-file;
+  end if;
 end function generate-properties-file;
 
 define function library-name-from-dependency
