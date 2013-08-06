@@ -109,6 +109,9 @@ define function generate-dylan-file
     format(stream, "\ndefine C-pointer-type <C-void**> => <C-void*>;\n");
     format(stream, "ignore(<C-void**>);\n\n");
 
+    format(stream, "define C-pointer-type <GError*> => <GError>;\n");
+    format(stream, "ignore(<GError*>);\n\n");
+
     let context = make(<context>, stream: stream);
     let count = g-irepository-get-n-infos(repo, namespace);
     for (i from 0 below count)
