@@ -298,8 +298,11 @@ define function  generate-jam-file
                           otherwise => concatenate(lower-namespace, "-", version);
                         end select;
 
-    format(stream, "LINKLIBS += `pkg-config --libs %s` ;\n", complete-name);
-    format(stream, "CCFLAGS += `pkg-config --cflags %s` ;\n", complete-name);
+    format(stream, "{\n");
+    format(stream, "  local _dll = [ FDLLName $(image) ] ;\n");
+    format(stream, "  LINKLIBS on $(_dll) += `pkg-config --libs %s` ;\n", complete-name);
+    format(stream, "  CCFLAGS += `pkg-config --cflags %s` ;\n", complete-name);
+    format(stream, "}\n");
   end with-open-file;
 end function generate-jam-file;
 
