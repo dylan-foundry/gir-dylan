@@ -292,8 +292,9 @@ define function  generate-jam-file
     let complete-name = select (lower-namespace by \=)
                           "atk" => "atk";
                           "cairo" => "cairo";
-                          "xlib" => "x11";
+                          "gdkpixbuf" => concatenate("gdk-pixbuf", "-", version);
                           "pango" => "pango";
+                          "xlib" => "x11";
                           otherwise => concatenate(lower-namespace, "-", version);
                         end select;
 
