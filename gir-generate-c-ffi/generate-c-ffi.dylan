@@ -605,7 +605,17 @@ define function write-c-ffi-function (context, function-info, container-name) =>
         // XXX: We don't handle this. When does this happen?
       else
         let direction = direction-to-string(g-arg-info-get-direction(arg));
-        let arg-type = map-to-dylan-type(context, g-arg-info-get-type(arg), direction: direction);
+        // Handle structs always as input parameters, even when they're output
+        // parameters.
+        let type-info = g-arg-info-get-type(arg);
+        let type-tag = g-type-info-get-tag(type-info);
+        let arg-type = map-to-dylan-type(context, type-info, direction: direction);
+        if (type-tag = $GI-TYPE-TAG-INTERFACE)
+          let interface-type-info = g-base-info-get-type(g-type-info-get-interface(type-info));
+          if (interface-type-info = $GI-INFO-TYPE-STRUCT)
+            direction := "input";
+          end if;
+        end if;
         format(context.output-stream, "  %s parameter %s_ :: %s;\n", direction, arg-name, arg-type);
       end if;
       g-base-info-unref(arg);
