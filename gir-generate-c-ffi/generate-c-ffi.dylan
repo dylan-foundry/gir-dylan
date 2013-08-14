@@ -3,6 +3,28 @@ synopsis: generate c-ffi bindings using gobject-introspection
 author: Bruce Mitchener, Jr.
 copyright: See LICENSE file in this distribution.
 
+define constant $BLACKLISTED-CLASSES = #[
+  // #(Namespace . ClassName")
+  // Not available on OS X
+  #("Gtk" . "Plug"),
+  #("Gtk" . "Socket")
+];
+
+define constant $BLACKLISTED-FUNCTIONS = #[
+  // Not implemented in gtk-quartz
+  // https://bugzilla.gnome.org/show_bug.cgi?id=705978
+  "gtk-drag-source-set-icon-gicon",
+  "gtk-drag-set-icon-gicon",
+
+  // Ubuntu specific function
+  "gtk-range-get-event-window",
+
+  // Undefined on Debian
+  "g-io-module-query",
+  "g-io-module-load",
+  "g-io-module-unload"
+];
+
 define class <context> (<object>)
   slot exported-bindings = #();
   constant slot exported-bindings-index = make(<set>);
@@ -449,12 +471,25 @@ define method write-c-ffi (context, interface-info, type == $GI-INFO-TYPE-INTERF
   end if;
 end method;
 
+define variable $ALL-BLACKLISTED-CLASSES = #[];
+define function object-blacklisted?
+    (object-name :: <string>)
+ => (blacklisted? :: <boolean>)
+  if (empty?($ALL-BLACKLISTED-CLASSES))
+    $ALL-BLACKLISTED-CLASSES := map(method(p)
+                                      format-to-string("<%s%s>", head(p), tail(p))
+                                    end,
+                                    $BLACKLISTED-CLASSES);
+  end if;
+  member?(object-name, $ALL-BLACKLISTED-CLASSES, test: \=);
+end function;
+
 define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
  => ()
   let name = g-base-info-get-name(object-info);
   let dylan-name = get-type-name(#"type", object-info);
   let dylan-pointer-name = get-type-name(#"type-pointer", object-info);
-  if (~binding-already-exported?(context, dylan-pointer-name))
+  if (~binding-already-exported?(context, dylan-pointer-name) & ~object-blacklisted?(dylan-pointer-name))
     add-exported-binding(context, dylan-pointer-name);
 
     let parent-info = g-object-info-get-parent(object-info);
@@ -506,12 +541,28 @@ define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
   end if;
 end method;
 
+define variable $ALL-BLACKLISTED-STRUCTS = #[];
+define function struct-blacklisted?
+    (struct-name :: <string>)
+ => (blacklisted? :: <boolean>)
+  if (empty?($ALL-BLACKLISTED-STRUCTS))
+    // Struct relative to blacklisted classes have name in the form
+    // NsNamePrivate or NsNameClass
+    let private-structs = map(method(p) format-to-string("<%s%sPrivate>", head(p), tail(p)) end,
+                              $BLACKLISTED-CLASSES);
+    let class-structs = map(method(p) format-to-string("<%s%sClass>", head(p), tail(p)) end,
+                          $BLACKLISTED-CLASSES);
+    $ALL-BLACKLISTED-STRUCTS := concatenate(private-structs, class-structs);
+  end if;
+  member?(struct-name, $ALL-BLACKLISTED-STRUCTS, test: \=);
+end function;
+
 define method write-c-ffi (context, struct-info, type == $GI-INFO-TYPE-STRUCT)
  => ()
   let name = g-base-info-get-name(struct-info);
   let dylan-name = get-type-name(#"type", struct-info);
   let dylan-pointer-name = get-type-name(#"type-pointer", struct-info);
-  if (~binding-already-exported?(context, dylan-pointer-name))
+  if (~binding-already-exported?(context, dylan-pointer-name) & ~struct-blacklisted?(dylan-pointer-name))
     add-exported-binding(context, dylan-pointer-name);
     format(context.output-stream, "define C-struct %s\n", dylan-name);
     let num-fields = g-struct-info-get-n-fields(struct-info);
@@ -588,9 +639,28 @@ define function write-c-ffi-field (context, field, container-name) => ()
          field-type);
 end function;
 
+define variable $ALL-BLACKLISTED-FUNCTIONS = #[];
+define function function-blacklisted?
+    (function-name :: <string>)
+ => (blacklisted? :: <boolean>)
+  if (empty?($ALL-BLACKLISTED-FUNCTIONS))
+    $ALL-BLACKLISTED-FUNCTIONS := map(method(p)
+                                        lowercase(format-to-string("%s-%s-",
+                                                                   head(p),
+                                                                   tail(p)))
+                                      end,
+                                      $BLACKLISTED-CLASSES);
+    $ALL-BLACKLISTED-FUNCTIONS := concatenate($ALL-BLACKLISTED-FUNCTIONS,
+                                              $BLACKLISTED-FUNCTIONS);
+  end if;
+  member?(function-name,
+          $ALL-BLACKLISTED-FUNCTIONS,
+          test: method(value, e) find-substring(value, e) == 0 end);
+end function;
+
 define function write-c-ffi-function (context, function-info, container-name) => ()
   let dylan-name = dylanize(g-function-info-get-symbol(function-info));
-  if (~binding-already-exported?(context, dylan-name))
+  if (~binding-already-exported?(context, dylan-name) & ~function-blacklisted?(dylan-name))
     add-exported-binding(context, dylan-name);
     format(context.output-stream, "define C-function %s\n", dylan-name);
     let function-flags = g-function-info-get-flags(function-info);
