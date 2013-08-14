@@ -5,8 +5,24 @@ copyright: See LICENSE file in this distribution.
 
 define constant $BLACKLISTED-CLASSES = #[
   // #(Namespace . ClassName")
+  // Not available on OS X
   #("Gtk" . "Plug"),
   #("Gtk" . "Socket")
+];
+
+define constant $BLACKLISTED-FUNCTIONS = #[
+  // Not implemented in gtk-quartz
+  // https://bugzilla.gnome.org/show_bug.cgi?id=705978
+  "gtk-drag-source-set-icon-gicon",
+  "gtk-drag-set-icon-gicon",
+
+  // Ubuntu specific function
+  "gtk-range-get-event-window",
+
+  // Undefined on Debian
+  "g-io-module-query",
+  "g-io-module-load",
+  "g-io-module-unload"
 ];
 
 define class <context> (<object>)
@@ -634,6 +650,8 @@ define function function-blacklisted?
                                                                    tail(p)))
                                       end,
                                       $BLACKLISTED-CLASSES);
+    $ALL-BLACKLISTED-FUNCTIONS := concatenate($ALL-BLACKLISTED-FUNCTIONS,
+                                              $BLACKLISTED-FUNCTIONS);
   end if;
   member?(function-name,
           $ALL-BLACKLISTED-FUNCTIONS,
