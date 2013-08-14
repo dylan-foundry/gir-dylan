@@ -498,7 +498,16 @@ define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
       format(context.output-stream, "define open C-subtype %s (<C-void*>)\n", dylan-pointer-name);
     else
       let parent-dylan-name = get-type-name(#"type-pointer", parent-info);
-      format(context.output-stream, "define open C-subtype %s (%s)\n", dylan-pointer-name, parent-dylan-name);
+      let num-interfaces = g-object-info-get-n-interfaces(object-info);
+      let super-classes = #[];
+      super-classes := add(super-classes, parent-dylan-name);
+      for (i from 0 below num-interfaces)
+        let interface-info = g-object-info-get-interface(object-info, i);
+        super-classes := add(super-classes, get-type-name(#"type-pointer", interface-info));
+      end for;
+      format(context.output-stream, "define open C-subtype %s (%s)\n",
+             dylan-pointer-name,
+             join(super-classes, ", "));
       g-base-info-unref(parent-info);
     end if;
 
