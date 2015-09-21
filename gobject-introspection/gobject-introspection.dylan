@@ -372,6 +372,12 @@ define C-function g-callable-info-skip-return
   c-name: "g_callable_info_skip_return";
 end;
 
+define C-function g-callable-info-can-throw-gerror
+  input parameter info :: <GICallableInfo>;
+  result res :: <C-boolean>;
+  c-name: "g_callable_info_can_throw_gerror";
+end;
+
 define C-function g-callable-info-get-n-args
   input parameter info :: <GICallableInfo>;
   result res :: <gint>;
@@ -390,6 +396,12 @@ define C-function g-callable-info-load-arg
   input parameter n :: <gint>;
   input parameter arg :: <GIArgInfo>;
   c-name: "g_callable_info_load_arg";
+end;
+
+define C-function g-callable-info-is-method
+  input parameter info :: <GICallableInfo>;
+  result res :: <C-boolean>;
+  c-name: "g_callable_info_is_method";
 end;
 
 define C-function g-constant-info-get-type
@@ -655,6 +667,13 @@ define C-function g-interface-info-get-signal
   input parameter n :: <gint>;
   result res :: <GISignalInfo>;
   c-name: "g_interface_info_get_signal";
+end;
+
+define C-function g-interface-info-find-signal
+  input parameter info :: <GIInterfaceInfo>;
+  input parameter name :: <C-string>;
+  result res :: <GISignalInfo>;
+  c-name: "g_interface_info_find_signal";
 end;
 
 define C-function g-interface-info-get-n-vfuncs

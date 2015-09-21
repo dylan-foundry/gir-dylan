@@ -33,6 +33,11 @@ define C-function g-irepository-get-default
   c-name: "g_irepository_get_default";
 end;
 
+define C-function g-irepository-prepend-library-path
+  input parameter directory :: <C-string>;
+  c-name: "g_irepository_prepend_library_path";
+end;
+
 define C-function g-irepository-prepend-search-path
   input parameter directory :: <C-string>;
   c-name: "g_irepository_prepend_search_path";
