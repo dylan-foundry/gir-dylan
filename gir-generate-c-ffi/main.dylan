@@ -3,29 +3,41 @@ synopsis: generate c-ffi bindings using gobject-introspection
 author: Bruce Mitchener, Jr.
 copyright: See LICENSE file in this distribution.
 
+define command-line <ggcf-command-line> ()
+  option ggcf-version :: <string>,
+    kind: <parameter-option>,
+    names: #("version"),
+    help: "Version of the library to generate bindings for. Defaults to most recent.";
+
+  option ggcf-dependencies :: <boolean>,
+    kind: <flag-option>,
+    names: #("dependencies"),
+    default: #f,
+    help: "Generate the bindings for the namespace's dependencies.";
+
+  // XXX: Should add a repeated-option-parameter for the search path.
+
+  option ggcf-namespaces :: <string>,
+    names: #("namespaces"),
+    kind: <positional-option>,
+    repeated?: #t,
+    help: "One or more namespaces";
+
+end command-line;
+
 define function parse-args
     (args :: <sequence>)
  => (parser :: <command-line-parser>)
-  let parser = make(<command-line-parser>);
-  add-option(parser,
-             make(<optional-parameter-option>,
-                  names: #("version"),
-                  default: #f,
-                  help: "Version of the library to generate bindings for. Defaults to most recent."));
-  add-option(parser,
-             make(<flag-option>,
-                  names: #("dependencies"),
-                  default: #f,
-                  help: "Generate the bindings for the namespace's dependencies."));
-  // XXX: Should add a repeated-option-parameter for the search path.
+  let parser
+    = make(<ggcf-command-line>,
+           help: "Generates C-FFI bindings from gobject-introspection data");
   block ()
-    parse-command-line(parser, args,
-                       usage: "gir-generate-c-ffi [options] namespaces...",
-                       description: "Generates C-FFI bindings from gobject-introspection data.");
-  exception (ex :: <help-requested>)
-    exit-application(0);
-  exception (ex :: <usage-error>)
-    exit-application(2);
+    parse-command-line(parser, args);
+  exception (err :: <abort-command-error>)
+    // This condition is signaled by parse-command-line and also if
+    // your own code calls abort-command().
+    format-err("%s\n", err);
+    exit-application(err.exit-status);
   end;
   parser
 end;
@@ -34,9 +46,15 @@ define function main (arguments :: <sequence>)
   // Older versions of glib require this.
   g-type-init();
   let parser = parse-args(arguments);
-  let namespaces = positional-options(parser);
-  let version = as(<C-string>, get-option-value(parser, "version") | null-pointer(<C-string>));
-  let dependencies? = get-option-value(parser, "dependencies");
+  let namespaces = parser.ggcf-namespaces;
+  let version = parser.ggcf-version;
+  let version
+    = if (version)
+        as(<C-string>, version)
+      else
+        null-pointer(<C-string>)
+      end;
+  let dependencies? = parser.ggcf-dependencies;
   // XXX: Fail nicely if no namespaces.
   // XXX: Fail if they specify a version and more than one namespace.
   for (namespace in namespaces)
@@ -57,7 +75,7 @@ define function main (arguments :: <sequence>)
 end function;
 
 define function load-typelib
-    (namespace :: <string>, version :: <string>)
+    (namespace :: <string>, version :: <C-string>)
  => (loaded? :: <boolean>)
   let repo = g-irepository-get-default();
   let (typelib, error) = g-irepository-require(repo, namespace, version, 0);
