@@ -15,6 +15,12 @@ define command-line <ggcf-command-line> ()
     default: #f,
     help: "Generate the bindings for the namespace's dependencies.";
 
+  option ggcf-override-deprecation :: <string>,
+    kind: <repeated-parameter-option>,
+    names: #("override-deprecation"),
+    variable: "NAME",
+    help: "Generate bindings for NAME marked deprecated in the repository";
+
   // XXX: Should add a repeated-option-parameter for the search path.
 
   option ggcf-namespaces :: <string>,
@@ -48,6 +54,7 @@ define function main (arguments :: <sequence>)
   let parser = parse-args(arguments);
   let namespaces = parser.ggcf-namespaces;
   let version = parser.ggcf-version;
+  let overrides = parser.ggcf-override-deprecation;
   let version
     = if (version)
         as(<C-string>, version)
@@ -59,14 +66,14 @@ define function main (arguments :: <sequence>)
   // XXX: Fail if they specify a version and more than one namespace.
   for (namespace in namespaces)
     if (load-typelib(namespace, version))
-      generate-c-ffi(namespace, version);
+      generate-c-ffi(namespace, version, overrides);
       if (dependencies?)
         let dependencies = dependencies-for-namespace(namespace, recursive: #t);
         for (dependency in dependencies)
           let name = head(dependency);
           let version = tail(dependency);
           if (load-typelib(name, version))
-            generate-c-ffi(name, version);
+            generate-c-ffi(name, version, overrides);
           end if;
         end for;
       end if;

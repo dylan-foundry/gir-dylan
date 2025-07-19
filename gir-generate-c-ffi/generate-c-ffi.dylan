@@ -46,6 +46,8 @@ define class <context> (<object>)
   slot properties = #();
   constant slot output-stream :: <stream>,
     required-init-keyword: stream:;
+  constant slot deprecation-overrides :: <sequence>,
+    required-init-keyword: overrides:;
 end class;
 
 define class <property> (<object>)
@@ -78,6 +80,13 @@ define function binding-already-exported?
           context.exported-bindings-index)
 end function binding-already-exported?;
 
+define function info-deprecated?
+    (context :: <context>, info :: <GIBaseInfo>)
+ => (deprecated? :: <boolean>);
+  g-base-info-is-deprecated(info)
+    & ~member?(g-base-info-get-name(info), context.deprecation-overrides, test: \=)
+end function;
+
 define function add-property
     (context :: <context>, property :: <property>)
  => ()
@@ -101,11 +110,11 @@ define function make-project-name
 end function;
 
 define function generate-c-ffi
-    (namespace :: <string>, version :: <string>)
+    (namespace :: <string>, version :: <string>, overrides :: <sequence>)
  => ()
   let project-dir = generate-directory(namespace, version);
   let (context, dependencies)
-    = generate-dylan-file(project-dir, namespace, version);
+    = generate-dylan-file(project-dir, namespace, version, overrides);
   generate-properties-file(project-dir, namespace, context.properties);
   generate-library-file(project-dir,
                         namespace,
@@ -130,7 +139,8 @@ end function;
 define function generate-dylan-file
     (project-dir :: <directory-locator>,
      namespace :: <string>,
-     version :: <string>)
+     version :: <string>,
+     overrides :: <sequence>)
  => (context :: <context>, dependencies :: <sequence>)
   let project-name = make-project-name(namespace, version);
   let target-path = make-target-path(project-dir, project-name, ".dylan");
@@ -149,11 +159,11 @@ define function generate-dylan-file
     format(stream, "define C-pointer-type <GError*> => <GError>;\n");
     format(stream, "ignore(<GError*>);\n\n");
 
-    let context = make(<context>, stream: stream);
+    let context = make(<context>, stream: stream, overrides: overrides);
     let count = g-irepository-get-n-infos(repo, namespace);
     for (i from 0 below count)
       let info = g-irepository-get-info(repo, namespace, i);
-      if (~g-base-info-is-deprecated(info))
+      if (~info-deprecated?(context, info))
         let type = g-base-info-get-type(info);
         write-c-ffi(context, info, type);
         force-output(context.output-stream);
@@ -482,7 +492,7 @@ define method write-c-ffi (context, interface-info, type == $GI-INFO-TYPE-INTERF
     let num-methods = g-interface-info-get-n-methods(interface-info);
     for (i from 0 below num-methods)
       let function-info = g-interface-info-get-method(interface-info, i);
-      if (~g-base-info-is-deprecated(function-info))
+      if (~info-deprecated?(context, function-info))
         write-c-ffi-function(context, function-info, dylan-pointer-name);
       end if;
     end for;
@@ -563,7 +573,7 @@ define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
     let num-methods = g-object-info-get-n-methods(object-info);
     for (i from 0 below num-methods)
       let function-info = g-object-info-get-method(object-info, i);
-      if (~g-base-info-is-deprecated(function-info))
+      if (~info-deprecated?(context, function-info))
         write-c-ffi-function(context, function-info, dylan-pointer-name);
       end if;
     end for;
@@ -604,7 +614,7 @@ define method write-c-ffi (context, struct-info, type == $GI-INFO-TYPE-STRUCT)
     let num-methods = g-struct-info-get-n-methods(struct-info);
     for (i from 0 below num-methods)
       let function-info = g-struct-info-get-method(struct-info, i);
-      if (~g-base-info-is-deprecated(function-info))
+      if (~info-deprecated?(context, function-info))
         write-c-ffi-function(context, function-info, dylan-pointer-name);
       end if;
     end for;
@@ -630,7 +640,7 @@ define method write-c-ffi (context, union-info, type == $GI-INFO-TYPE-UNION)
     let num-methods = g-union-info-get-n-methods(union-info);
     for (i from 0 below num-methods)
       let function-info = g-union-info-get-method(union-info, i);
-      if (~g-base-info-is-deprecated(function-info))
+      if (~info-deprecated?(context, function-info))
         write-c-ffi-function(context, function-info, dylan-pointer-name);
       end if;
     end for;
