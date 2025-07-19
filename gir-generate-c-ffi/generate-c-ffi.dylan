@@ -25,6 +25,21 @@ define constant $BLACKLISTED-FUNCTIONS = #[
   "g-io-module-unload"
 ];
 
+define constant $BLACKLISTED-CONSTANTS = #[
+  "MININT8",
+  "MININT16",
+  "MININT32",
+  "MININT64",
+  "MAXINT8",
+  "MAXINT16",
+  "MAXINT32",
+  "MAXINT64",
+  "MAXUINT8",
+  "MAXUINT16",
+  "MAXUINT32",
+  "MAXUINT64"
+];
+
 define class <context> (<object>)
   slot exported-bindings = #();
   constant slot exported-bindings-index = make(<set>);
@@ -390,7 +405,8 @@ Define method write-c-ffi (context, constant-info, type == $GI-INFO-TYPE-CONSTAN
     constant-name := concatenate(prefix, "-", constant-name);
   end if;
   let dylan-name = dylanize(concatenate("$", constant-name));
-  if (~binding-already-exported?(context, dylan-name))
+  if (~binding-already-exported?(context, dylan-name)
+        & ~member?(constant-name, $BLACKLISTED-CONSTANTS, test: \=))
     add-exported-binding(context, dylan-name);
     let arg = make(<GIArgument>);
     let type = g-constant-info-get-type(constant-info);
