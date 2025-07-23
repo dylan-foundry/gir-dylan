@@ -461,6 +461,50 @@ define method write-c-ffi (context, function-info, type == $GI-INFO-TYPE-FUNCTIO
   write-c-ffi-function(context, function-info, #f);
 end method;
 
+define function superclass-infos
+    (info :: <GIBaseInfo>)
+ => (parent-infos :: <sequence>);
+  // Traverse the parent/interface/prerequisite relation and record
+  // the maximum depth
+  let max-depth = make(<string-table>);
+  local
+    method traverse(info :: <GIBaseInfo>, depth :: <integer>)
+      // Update the maximum depth for this node
+      let name = g-base-info-get-name(info);
+      max-depth[name] := max(depth, element(max-depth, name, default: 0));
+
+      // Identify and traverse parents
+      let parent-infos = make(<stretchy-vector>);
+      select (g-base-info-get-type(info))
+        $GI-INFO-TYPE-INTERFACE =>
+          let num-prerequisites = g-interface-info-get-n-prerequisites(info);
+          for (i from 0 below num-prerequisites)
+            let prerequisite = g-interface-info-get-prerequisite(info, i);
+            traverse(prerequisite, depth + 1);
+            add!(parent-infos, prerequisite);
+          end for;
+        $GI-INFO-TYPE-OBJECT =>
+          let parent-info = g-object-info-get-parent(info);
+          if (~null-pointer?(parent-info))
+            traverse(parent-info, depth + 1);
+            add!(parent-infos, parent-info);
+          end if;
+          let num-interfaces = g-object-info-get-n-interfaces(info);
+          for (i from 0 below num-interfaces)
+            let interface-info = g-object-info-get-interface(info, i);
+            traverse(interface-info, depth + 1);
+            add!(parent-infos, interface-info);
+          end for;
+      end select;
+      parent-infos
+    end method;
+  // Select only the direct parents
+  choose(method (info :: <GIBaseInfo>)
+           max-depth[g-base-info-get-name(info)] = 1
+         end,
+         traverse(info, 0))
+end function;
+
 define method write-c-ffi (context, interface-info, type == $GI-INFO-TYPE-INTERFACE)
  => ()
   let dylan-name = get-type-name(#"type", interface-info);
@@ -468,20 +512,17 @@ define method write-c-ffi (context, interface-info, type == $GI-INFO-TYPE-INTERF
   if (~binding-already-exported?(context, dylan-pointer-name))
     add-exported-binding(context, dylan-pointer-name);
 
-    let num-prerequisites = g-interface-info-get-n-prerequisites(interface-info);
     format(context.output-stream, "// Interface\n");
-    let prerequisites-name = #[];
-    if (num-prerequisites = 0)
-      prerequisites-name := add!(prerequisites-name, "<C-void*>");
-    else
-      for (i from 0 below num-prerequisites)
-        let prerequisite = g-interface-info-get-prerequisite(interface-info, i);
-        let prerequisite-dylan-name = get-type-name(#"type-pointer", prerequisite);
-        prerequisites-name := add!(prerequisites-name, prerequisite-dylan-name);
-      end for;
-    end;
-    let joined-names = join(prerequisites-name, ", ");
-    format(context.output-stream, "define open C-subtype %s (%s)\n", dylan-pointer-name, joined-names);
+    let prerequisites = superclass-infos(interface-info);
+    let joined-names
+      = if (empty?(prerequisites))
+          "<C-void*>"
+        else
+          join(map(curry(get-type-name, #"type-pointer"), prerequisites), ", ")
+        end if;
+
+    format(context.output-stream, "define open C-subtype %s (%s)\n",
+           dylan-pointer-name, joined-names);
     format(context.output-stream, "end C-subtype;\n\n");
     let dylan-pointer-pointer-name = get-type-name(#"type-pointer-pointer", interface-info);
     add-exported-binding(context, dylan-pointer-pointer-name);
@@ -520,26 +561,24 @@ define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
   if (~binding-already-exported?(context, dylan-pointer-name) & ~object-blacklisted?(dylan-pointer-name))
     add-exported-binding(context, dylan-pointer-name);
 
-    let parent-info = g-object-info-get-parent(object-info);
-    if (null-pointer?(parent-info))
-      // This is the root object
-      format(context.output-stream, "define open C-subtype %s (<C-void*>)\n", dylan-pointer-name);
-    else
-      let parent-dylan-name = get-type-name(#"type-pointer", parent-info);
-      let num-interfaces = g-object-info-get-n-interfaces(object-info);
-      let super-classes = #[];
-      super-classes := add(super-classes, parent-dylan-name);
-      for (i from 0 below num-interfaces)
-        let interface-info = g-object-info-get-interface(object-info, i);
-        super-classes := add(super-classes, get-type-name(#"type-pointer", interface-info));
-      end for;
+    let prerequisites = superclass-infos(object-info);
+    let num-fields = g-object-info-get-n-fields(object-info);
+    let joined-names
+      = if (empty?(prerequisites))
+          // Root object class
+          if (num-fields > 0)
+            let field = g-object-info-get-field(object-info, 0);
+            map-to-dylan-type(context, g-field-info-get-type(field))
+          else
+            "<C-void*>"
+          end if
+        else
+          join(map(curry(get-type-name, #"type-pointer"), prerequisites), ", ")
+        end if;
       format(context.output-stream, "define open C-subtype %s (%s)\n",
              dylan-pointer-name,
-             join(super-classes, ", "));
-      g-base-info-unref(parent-info);
-    end if;
+             joined-names);
 
-    let num-fields = g-object-info-get-n-fields(object-info);
     for (i from 0 below num-fields)
       let field = g-object-info-get-field(object-info, i);
       write-c-ffi-field(context, field, name);
