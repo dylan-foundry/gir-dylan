@@ -392,7 +392,7 @@ end method;
 define method write-c-ffi (context, boxed-info, type == $GI-INFO-TYPE-BOXED)
  => ()
   // This is the same as a struct
-  write-c-ffi(context, boxed-info, $GI-INFO-TYPE-STRUCT);
+  // write-c-ffi(context, boxed-info, $GI-INFO-TYPE-STRUCT);
 end method;
 
 define method write-c-ffi (context, callback-info, type == $GI-INFO-TYPE-CALLBACK)
