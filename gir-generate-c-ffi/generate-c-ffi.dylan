@@ -514,6 +514,13 @@ define method write-c-ffi (context, interface-info, type == $GI-INFO-TYPE-INTERF
 
     format(context.output-stream, "// Interface\n");
     let prerequisites = superclass-infos(interface-info);
+    for (info in prerequisites)
+      if (info-deprecated?(context, info))
+        format(*standard-error*,
+               "Type %s is deprecated but referenced, override required\n",
+               g-base-info-get-name(info));
+      end if;
+    end for;
     let joined-names
       = if (empty?(prerequisites))
           "<C-void*>"
@@ -562,6 +569,13 @@ define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
     add-exported-binding(context, dylan-pointer-name);
 
     let prerequisites = superclass-infos(object-info);
+    for (info in prerequisites)
+      if (info-deprecated?(context, info))
+        format(*standard-error*,
+               "Type %s is deprecated but referenced, override required\n",
+               g-base-info-get-name(info));
+      end if;
+    end for;
     let num-fields = g-object-info-get-n-fields(object-info);
     let joined-names
       = if (empty?(prerequisites))
