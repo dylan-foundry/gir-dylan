@@ -1,2 +1,16 @@
+# backup files
+*~
+*.bak
+.DS_Store
+
+# auto-generated project file
 *.hdp
-_build
+
+# compiler build directory
+_build/
+
+# Deft-generated package cache
+_packages/
+
+# Deft-generated registry folder
+registry/
