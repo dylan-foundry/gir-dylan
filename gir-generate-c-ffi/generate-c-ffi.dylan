@@ -336,11 +336,6 @@ define function  generate-jam-file
                   if-does-not-exist: #"create")
     let lower-namespace = lowercase(namespace);
 
-    // Handle gtk namespace being different from the pkg-config name
-    if (lower-namespace = "gtk")
-      lower-namespace := "gtk+";
-    end if;
-
     let complete-name = select (lower-namespace by \=)
                           "atk" => "atk";
                           "cairo" => "cairo";
