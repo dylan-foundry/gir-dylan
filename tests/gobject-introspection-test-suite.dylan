@@ -6,12 +6,6 @@ copyright: See LICENSE file in this distribution.
 define constant $glib-namespace = "GLib";
 define constant $invalid-namespace = "InvalidNamespaceNameXXX";
 
-define suite gobject-introspection-test-suite ()
-  test invalid-namespace-yields-error;
-  test invalid-namespace-is-not-registered;
-  test can-load-glib;
-end suite;
-
 define test invalid-namespace-yields-error ()
   let repo = g-irepository-get-default();
   let (typelib, error) = g-irepository-require(repo, $invalid-namespace, "2.0", 0);
@@ -33,3 +27,9 @@ define test can-load-glib ()
   check-true("namespace is registered", g-irepository-is-registered(repo, $glib-namespace, "2.0"));
   check-true("namespace has info", g-irepository-get-n-infos(repo, $glib-namespace) > 0);
 end test;
+
+define suite gobject-introspection-test-suite ()
+  test invalid-namespace-yields-error;
+  test invalid-namespace-is-not-registered;
+  test can-load-glib;
+end suite;

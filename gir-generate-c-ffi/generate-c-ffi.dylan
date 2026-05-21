@@ -25,12 +25,29 @@ define constant $BLACKLISTED-FUNCTIONS = #[
   "g-io-module-unload"
 ];
 
+define constant $BLACKLISTED-CONSTANTS = #[
+  "MININT8",
+  "MININT16",
+  "MININT32",
+  "MININT64",
+  "MAXINT8",
+  "MAXINT16",
+  "MAXINT32",
+  "MAXINT64",
+  "MAXUINT8",
+  "MAXUINT16",
+  "MAXUINT32",
+  "MAXUINT64"
+];
+
 define class <context> (<object>)
   slot exported-bindings = #();
   constant slot exported-bindings-index = make(<set>);
   slot properties = #();
   constant slot output-stream :: <stream>,
     required-init-keyword: stream:;
+  constant slot deprecation-overrides :: <sequence>,
+    required-init-keyword: overrides:;
 end class;
 
 define class <property> (<object>)
@@ -63,6 +80,13 @@ define function binding-already-exported?
           context.exported-bindings-index)
 end function binding-already-exported?;
 
+define function info-deprecated?
+    (context :: <context>, info :: <GIBaseInfo>)
+ => (deprecated? :: <boolean>);
+  g-base-info-is-deprecated(info)
+    & ~member?(g-base-info-get-name(info), context.deprecation-overrides, test: \=)
+end function;
+
 define function add-property
     (context :: <context>, property :: <property>)
  => ()
@@ -86,11 +110,11 @@ define function make-project-name
 end function;
 
 define function generate-c-ffi
-    (namespace :: <string>, version :: <string>)
+    (namespace :: <string>, version :: <string>, overrides :: <sequence>)
  => ()
   let project-dir = generate-directory(namespace, version);
   let (context, dependencies)
-    = generate-dylan-file(project-dir, namespace, version);
+    = generate-dylan-file(project-dir, namespace, version, overrides);
   generate-properties-file(project-dir, namespace, context.properties);
   generate-library-file(project-dir,
                         namespace,
@@ -115,7 +139,8 @@ end function;
 define function generate-dylan-file
     (project-dir :: <directory-locator>,
      namespace :: <string>,
-     version :: <string>)
+     version :: <string>,
+     overrides :: <sequence>)
  => (context :: <context>, dependencies :: <sequence>)
   let project-name = make-project-name(namespace, version);
   let target-path = make-target-path(project-dir, project-name, ".dylan");
@@ -134,11 +159,11 @@ define function generate-dylan-file
     format(stream, "define C-pointer-type <GError*> => <GError>;\n");
     format(stream, "ignore(<GError*>);\n\n");
 
-    let context = make(<context>, stream: stream);
+    let context = make(<context>, stream: stream, overrides: overrides);
     let count = g-irepository-get-n-infos(repo, namespace);
     for (i from 0 below count)
       let info = g-irepository-get-info(repo, namespace, i);
-      if (~g-base-info-is-deprecated(info))
+      if (~info-deprecated?(context, info))
         let type = g-base-info-get-type(info);
         write-c-ffi(context, info, type);
         force-output(context.output-stream);
@@ -239,7 +264,9 @@ define function generate-library-file
     format(stream, "  use dylan;\n");
     format(stream, "  use common-dylan;\n");
     format(stream, "  use c-ffi;\n");
-    format(stream, "  use gobject-glue;\n");
+    if (namespace ~= "GLib")
+      format(stream, "  use gobject-glue;\n");
+    end if;
     for (dependency in dependencies)
       format(stream, "  use %s;\n", library-name-from-dependency(dependency));
     end for;
@@ -309,11 +336,6 @@ define function  generate-jam-file
                   if-does-not-exist: #"create")
     let lower-namespace = lowercase(namespace);
 
-    // Handle gtk namespace being different from the pkg-config name
-    if (lower-namespace = "gtk")
-      lower-namespace := "gtk+";
-    end if;
-
     let complete-name = select (lower-namespace by \=)
                           "atk" => "atk";
                           "cairo" => "cairo";
@@ -324,9 +346,11 @@ define function  generate-jam-file
                         end select;
 
     format(stream, "{\n");
-    format(stream, "  local _dll = [ FDLLName $(image) ] ;\n");
-    format(stream, "  LINKLIBS on $(_dll) += `pkg-config --libs %s` ;\n", complete-name);
-    format(stream, "  CCFLAGS += `pkg-config --cflags %s` ;\n", complete-name);
+    format(stream, "  local _dll = [ FDLLName $(IMAGE) ] ;\n");
+    format(stream, "  local _modules = %s ;\n", complete-name);
+    format(stream, "  LinkPkgConfigLibraries $(_dll) : $(_modules) ;\n");
+    format(stream, "  # local _cs = ;\n");
+    format(stream, "  # ObjectPkgConfigCcFlags $(_cs) : $(_modules) ;\n");
     format(stream, "}\n");
   end with-open-file;
 end function generate-jam-file;
@@ -367,7 +391,7 @@ end method;
 define method write-c-ffi (context, boxed-info, type == $GI-INFO-TYPE-BOXED)
  => ()
   // This is the same as a struct
-  write-c-ffi(context, boxed-info, $GI-INFO-TYPE-STRUCT);
+  // write-c-ffi(context, boxed-info, $GI-INFO-TYPE-STRUCT);
 end method;
 
 define method write-c-ffi (context, callback-info, type == $GI-INFO-TYPE-CALLBACK)
@@ -390,7 +414,8 @@ Define method write-c-ffi (context, constant-info, type == $GI-INFO-TYPE-CONSTAN
     constant-name := concatenate(prefix, "-", constant-name);
   end if;
   let dylan-name = dylanize(concatenate("$", constant-name));
-  if (~binding-already-exported?(context, dylan-name))
+  if (~binding-already-exported?(context, dylan-name)
+        & ~member?(constant-name, $BLACKLISTED-CONSTANTS, test: \=))
     add-exported-binding(context, dylan-name);
     let arg = make(<GIArgument>);
     let type = g-constant-info-get-type(constant-info);
@@ -435,6 +460,50 @@ define method write-c-ffi (context, function-info, type == $GI-INFO-TYPE-FUNCTIO
   write-c-ffi-function(context, function-info, #f);
 end method;
 
+define function superclass-infos
+    (info :: <GIBaseInfo>)
+ => (parent-infos :: <sequence>);
+  // Traverse the parent/interface/prerequisite relation and record
+  // the maximum depth
+  let max-depth = make(<string-table>);
+  local
+    method traverse(info :: <GIBaseInfo>, depth :: <integer>)
+      // Update the maximum depth for this node
+      let name = g-base-info-get-name(info);
+      max-depth[name] := max(depth, element(max-depth, name, default: 0));
+
+      // Identify and traverse parents
+      let parent-infos = make(<stretchy-vector>);
+      select (g-base-info-get-type(info))
+        $GI-INFO-TYPE-INTERFACE =>
+          let num-prerequisites = g-interface-info-get-n-prerequisites(info);
+          for (i from 0 below num-prerequisites)
+            let prerequisite = g-interface-info-get-prerequisite(info, i);
+            traverse(prerequisite, depth + 1);
+            add!(parent-infos, prerequisite);
+          end for;
+        $GI-INFO-TYPE-OBJECT =>
+          let parent-info = g-object-info-get-parent(info);
+          if (~null-pointer?(parent-info))
+            traverse(parent-info, depth + 1);
+            add!(parent-infos, parent-info);
+          end if;
+          let num-interfaces = g-object-info-get-n-interfaces(info);
+          for (i from 0 below num-interfaces)
+            let interface-info = g-object-info-get-interface(info, i);
+            traverse(interface-info, depth + 1);
+            add!(parent-infos, interface-info);
+          end for;
+      end select;
+      parent-infos
+    end method;
+  // Select only the direct parents
+  choose(method (info :: <GIBaseInfo>)
+           max-depth[g-base-info-get-name(info)] = 1
+         end,
+         traverse(info, 0))
+end function;
+
 define method write-c-ffi (context, interface-info, type == $GI-INFO-TYPE-INTERFACE)
  => ()
   let dylan-name = get-type-name(#"type", interface-info);
@@ -442,20 +511,24 @@ define method write-c-ffi (context, interface-info, type == $GI-INFO-TYPE-INTERF
   if (~binding-already-exported?(context, dylan-pointer-name))
     add-exported-binding(context, dylan-pointer-name);
 
-    let num-prerequisites = g-interface-info-get-n-prerequisites(interface-info);
     format(context.output-stream, "// Interface\n");
-    let prerequisites-name = #[];
-    if (num-prerequisites = 0)
-      prerequisites-name := add!(prerequisites-name, "<C-void*>");
-    else
-      for (i from 0 below num-prerequisites)
-        let prerequisite = g-interface-info-get-prerequisite(interface-info, i);
-        let prerequisite-dylan-name = get-type-name(#"type-pointer", prerequisite);
-        prerequisites-name := add!(prerequisites-name, prerequisite-dylan-name);
-      end for;
-    end;
-    let joined-names = join(prerequisites-name, ", ");
-    format(context.output-stream, "define open C-subtype %s (%s)\n", dylan-pointer-name, joined-names);
+    let prerequisites = superclass-infos(interface-info);
+    for (info in prerequisites)
+      if (info-deprecated?(context, info))
+        format(*standard-error*,
+               "Type %s is deprecated but referenced, override required\n",
+               g-base-info-get-name(info));
+      end if;
+    end for;
+    let joined-names
+      = if (empty?(prerequisites))
+          "<C-void*>"
+        else
+          join(map(curry(get-type-name, #"type-pointer"), prerequisites), ", ")
+        end if;
+
+    format(context.output-stream, "define open C-subtype %s (%s)\n",
+           dylan-pointer-name, joined-names);
     format(context.output-stream, "end C-subtype;\n\n");
     let dylan-pointer-pointer-name = get-type-name(#"type-pointer-pointer", interface-info);
     add-exported-binding(context, dylan-pointer-pointer-name);
@@ -466,7 +539,9 @@ define method write-c-ffi (context, interface-info, type == $GI-INFO-TYPE-INTERF
     let num-methods = g-interface-info-get-n-methods(interface-info);
     for (i from 0 below num-methods)
       let function-info = g-interface-info-get-method(interface-info, i);
-      write-c-ffi-function(context, function-info, dylan-pointer-name);
+      if (~info-deprecated?(context, function-info))
+        write-c-ffi-function(context, function-info, dylan-pointer-name);
+      end if;
     end for;
   end if;
 end method;
@@ -492,26 +567,31 @@ define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
   if (~binding-already-exported?(context, dylan-pointer-name) & ~object-blacklisted?(dylan-pointer-name))
     add-exported-binding(context, dylan-pointer-name);
 
-    let parent-info = g-object-info-get-parent(object-info);
-    if (null-pointer?(parent-info))
-      // This is the root object
-      format(context.output-stream, "define open C-subtype %s (<C-void*>)\n", dylan-pointer-name);
-    else
-      let parent-dylan-name = get-type-name(#"type-pointer", parent-info);
-      let num-interfaces = g-object-info-get-n-interfaces(object-info);
-      let super-classes = #[];
-      super-classes := add(super-classes, parent-dylan-name);
-      for (i from 0 below num-interfaces)
-        let interface-info = g-object-info-get-interface(object-info, i);
-        super-classes := add(super-classes, get-type-name(#"type-pointer", interface-info));
-      end for;
+    let prerequisites = superclass-infos(object-info);
+    for (info in prerequisites)
+      if (info-deprecated?(context, info))
+        format(*standard-error*,
+               "Type %s is deprecated but referenced, override required\n",
+               g-base-info-get-name(info));
+      end if;
+    end for;
+    let num-fields = g-object-info-get-n-fields(object-info);
+    let joined-names
+      = if (empty?(prerequisites))
+          // Root object class
+          if (num-fields > 0)
+            let field = g-object-info-get-field(object-info, 0);
+            map-to-dylan-type(context, g-field-info-get-type(field))
+          else
+            "<C-void*>"
+          end if
+        else
+          join(map(curry(get-type-name, #"type-pointer"), prerequisites), ", ")
+        end if;
       format(context.output-stream, "define open C-subtype %s (%s)\n",
              dylan-pointer-name,
-             join(super-classes, ", "));
-      g-base-info-unref(parent-info);
-    end if;
+             joined-names);
 
-    let num-fields = g-object-info-get-n-fields(object-info);
     for (i from 0 below num-fields)
       let field = g-object-info-get-field(object-info, i);
       write-c-ffi-field(context, field, name);
@@ -545,7 +625,9 @@ define method write-c-ffi (context, object-info, type == $GI-INFO-TYPE-OBJECT)
     let num-methods = g-object-info-get-n-methods(object-info);
     for (i from 0 below num-methods)
       let function-info = g-object-info-get-method(object-info, i);
-      write-c-ffi-function(context, function-info, dylan-pointer-name);
+      if (~info-deprecated?(context, function-info))
+        write-c-ffi-function(context, function-info, dylan-pointer-name);
+      end if;
     end for;
   end if;
 end method;
@@ -584,7 +666,9 @@ define method write-c-ffi (context, struct-info, type == $GI-INFO-TYPE-STRUCT)
     let num-methods = g-struct-info-get-n-methods(struct-info);
     for (i from 0 below num-methods)
       let function-info = g-struct-info-get-method(struct-info, i);
-      write-c-ffi-function(context, function-info, dylan-pointer-name);
+      if (~info-deprecated?(context, function-info))
+        write-c-ffi-function(context, function-info, dylan-pointer-name);
+      end if;
     end for;
   end if;
 end method;
@@ -608,7 +692,9 @@ define method write-c-ffi (context, union-info, type == $GI-INFO-TYPE-UNION)
     let num-methods = g-union-info-get-n-methods(union-info);
     for (i from 0 below num-methods)
       let function-info = g-union-info-get-method(union-info, i);
-      write-c-ffi-function(context, function-info, dylan-pointer-name);
+      if (~info-deprecated?(context, function-info))
+        write-c-ffi-function(context, function-info, dylan-pointer-name);
+      end if;
     end for;
   end if;
 end method;

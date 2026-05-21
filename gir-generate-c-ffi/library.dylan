@@ -17,7 +17,7 @@ end library;
 
 define module gir-generate-c-ffi
   use common-dylan, exclude: { format-to-string };
-  use collections;
+  use set;
   use c-ffi;
   use gobject-introspection;
   use command-line-parser;
